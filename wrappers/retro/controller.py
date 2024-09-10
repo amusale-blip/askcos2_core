@@ -122,7 +122,13 @@ class RetroController(BaseWrapper):
             response = self.convert_response(
                 wrapper_response=wrapper_response, backend=input.backend)
 
-            cache_controller.add(module_name=self.name, input=input, response=response)
+            # only add successful response into cache
+            if response.status_code == 200:
+                cache_controller.add(
+                    module_name=self.name,
+                    input=input,
+                    response=response
+                )
 
         return response
 
