@@ -141,7 +141,14 @@ class ExpandOneWrapper(BaseWrapper):
             )
             response = response.json()
             response = ExpandOneOutput(**response)
-            cache_controller.add(module_name=self.name, input=input, response=response)
+
+            # only add successful response into cache
+            if response.status == "SUCCESS":
+                cache_controller.add(
+                    module_name=self.name,
+                    input=input,
+                    response=response
+                )
 
         return response
 
