@@ -1,3 +1,4 @@
+import copy
 import io
 import itertools
 import rdkit.Chem as Chem
@@ -240,12 +241,18 @@ def mol_to_image(
         options.fixedBondLength = max(options.fixedBondLength, 20)
         padding += 1.0
     if reference:
-        reference = Chem.MolFromSmiles(reference)
-        if abbreviate and not highlight_atoms and not highlight_bonds and clear_map:
-            reference = rdAbbreviations.CondenseMolAbbreviations(
-                reference, ABBREVIATIONS
-            )
-        mol = align_molecule(mol, reference)
+        mol_backup = copy.deepcopy(mol)
+        # back up the mol as-is as the alignment algorithm changes mol in-place
+
+        try:
+            reference = Chem.MolFromSmiles(reference)
+            if abbreviate and not highlight_atoms and not highlight_bonds and clear_map:
+                reference = rdAbbreviations.CondenseMolAbbreviations(
+                    reference, ABBREVIATIONS
+                )
+            mol = align_molecule(mol, reference)
+        except RuntimeError:
+            mol = mol_backup
 
     mol = Draw.PrepareMolForDrawing(mol, **kwargs)
     options.prepareMolsBeforeDrawing = False  # Already prepared
