@@ -57,7 +57,7 @@ def sim_search(
 
     try:
         fp_max = int(qfp_count / threshold)
-        print("adn here")
+        print("and here")
     except ZeroDivisionError:
         fp_max = float("inf")
     print("made it here")
