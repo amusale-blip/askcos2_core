@@ -92,3 +92,9 @@ async def login_for_access_token(
     }
 
     return token_dict
+
+
+async def logout(response: Response):
+    response.delete_cookie("access_token")
+
+    return {"status": "Successfully logged out!"}

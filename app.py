@@ -87,6 +87,12 @@ router.add_api_route(
     response_model=oauth2.Token,
     tags=["admin"]
 )
+router.add_api_route(
+    path="/logout",
+    endpoint=oauth2.logout,
+    methods=["POST"],
+    tags=["admin"]
+)
 app.include_router(router)
 
 for wrapper in wrapper_registry:
