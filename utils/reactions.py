@@ -1,11 +1,8 @@
 import numpy as np
-import sys
-import time
 from configs import db_config
 from pydantic import BaseModel
 from pymongo import errors, MongoClient
 from rdkit import Chem
-from rdkit.Chem import AllChem
 from schemas.base import LowerCamelAliasModel
 from typing import Any
 from utils import register_util
@@ -39,6 +36,7 @@ class Reactions:
     methods_to_bind: dict[str, list[str]] = {
         "post": ["POST"],
         "search_reaction_id": ["POST"],
+        "lookup_by_exact_product_smiles": ["POST"],
         "lookup_similar_smiles": ["POST"]
     }
 
@@ -60,48 +58,31 @@ class Reactions:
             self.mol_collection = self.db[mol_collection]
             self.count_collection = self.db[count_collection]
 
-            # FIXME: loading fingerprints is very expensive
-            # self.mol_fps, self.mol_fp_counts, self.mol_fp_refs = (
-            #     self.load_mol_fps_and_counts())
+    def lookup_by_exact_product_smiles(
+        self,
+        smiles: str,
+        reaction_set: str = "USPTO_FULL"
+    ) -> list[str]:
+        """
+        Lookup molecule entries (extracted from the reaction database) by exact match
 
-    def load_mol_fps_and_counts(self) -> tuple[
-        dict[str, np.ndarray],
-        dict[str, np.ndarray],
-        dict[str, dict[int, str]]
-    ]:
-        template_sets = []
-        mol_fps = {}
-        mol_fp_counts = {}
-        mol_fp_refs = {}
+        Returns:
+            A list of reaction ids
+        """
 
-        start = time.time()
-        for i, doc in enumerate(self.mol_collection.find()):
-            if i % 100000 == 0:
-                print(f"Processed {i} reactions in {time.time() - start: .2f} seconds")
-                sys.stdout.flush()
+        mol = Chem.MolFromSmiles(smiles)
+        if not mol:
+            return []
+        canonical_smiles = Chem.MolToSmiles(mol)
 
-            template_set = doc["template_set"]
-            if template_set not in template_sets:
-                template_sets.append(template_set)
-                mol_fps[template_set] = []
-                mol_fp_counts[template_set] = []
-                mol_fp_refs[template_set] = {}
+        query = {
+            "product_smiles": canonical_smiles,
+            "template_set": reaction_set
+        }
+        cursor = self.mol_collection.find(query)
+        reaction_ids = [str(mol["_id"]) for mol in cursor]
 
-            current_index_in_set = len(mol_fps[template_set])
-            mol_fps[template_set].append(_bits_to_array(doc["mfp_bits"]))
-            mol_fp_counts[template_set].append(doc["mfp_count"])
-            mol_fp_refs[template_set][current_index_in_set] = doc["_id"]
-
-        for template_set in template_sets:
-            mol_fps[template_set] = np.stack(mol_fps[template_set])
-            print(f"mol_fps shape for template_set {template_set}: "
-                  f"{mol_fps[template_set].shape}")
-            mol_fp_counts[template_set] = np.array(
-                mol_fp_counts[template_set],
-                dtype=int
-            )
-
-        return mol_fps, mol_fp_counts, mol_fp_refs
+        return reaction_ids
 
     def lookup_similar_smiles(
         self,

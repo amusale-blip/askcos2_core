@@ -24,6 +24,7 @@ except errors.ServerSelectionTimeoutError:
     raise ValueError("Cannot connect to mongodb for reactions")
 else:
     db = client[database]
+    # force re-computing when invoked
     db.drop_collection(mol_collection)
     db.drop_collection(count_collection)
 
@@ -70,6 +71,14 @@ def _get_products_and_fps(rxn: dict) -> dict[str, Any] | None:
     # mfp_bits = mfp_bits.astype(dtype=np.bool_)
     # pfp_bits = pfp_bits.astype(dtype=np.bool_)
 
+    # proper canonicalization by removing atom mapping first
+    for a in product_mol.GetAtoms():
+        a.ClearProp("molAtomMapNumber")
+        a.SetIsotope(0)
+    product_smiles = Chem.MolToSmiles(product_mol)
+
+    # only stores "indexes" and canonical smiles for mol
+    # reaction metadata will be retrieved via rxn _id
     mol = {
         "_id": rxn["_id"],
         "template_set": rxn["template_set"],
@@ -90,16 +99,19 @@ def _get_products_and_fps(rxn: dict) -> dict[str, Any] | None:
     return mol
 
 
-def precompute_reactions() -> None:
+def precompute_fingerprints() -> None:
     start = time.time()
     mfp_counts = {}
     # all_mfp_bits = []
     success_count = 0
 
     p = multiprocessing.Pool()
+    # query = {
+    #     "reaction_smiles": {"$exists": True},
+    #     "reaction_smarts": {"$nin": [None, ""]}
+    # }
     query = {
-        "reaction_smiles": {"$exists": True},
-        "reaction_smarts": {"$nin": [None, ""]}
+        "reaction_smiles": {"$exists": True}
     }
 
     print("Precomputing fingerprints for all reactions (including newly added ones)")
@@ -108,7 +120,7 @@ def precompute_reactions() -> None:
     cursor = collection.find(query)
     for i, result in enumerate(p.imap_unordered(_get_products_and_fps, cursor)):
         if i > 0 and i % 100000 == 0:
-            print(f"Processed {i} reactions with 'reaction_smiles' and 'reaction_smarts' "
+            print(f"Processed {i} reactions with 'reaction_smiles' "
                   f"in {time.time() - start:.2f} seconds. "
                   f"Success count: {success_count}")
             sys.stdout.flush()
@@ -154,6 +166,11 @@ def precompute_reactions() -> None:
     # mol_collection.create_index("mfp_count")
     # mol_collection.create_index("pfp_bits")
     # mol_collection.create_index("pfp_count")
+
+
+def precompute_reactions():
+    precompute_fingerprints()
+    # precompute_string_fields()        # placeholder for future extension
 
 
 def main():
