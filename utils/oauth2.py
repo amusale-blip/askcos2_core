@@ -1,11 +1,12 @@
 import os
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Depends, HTTPException, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import Annotated
+from utils.oauth2_cookie import OAuth2PasswordBearerWithCookie
 from utils.registry import get_util_registry
 
 SECRET_KEY = os.environ.get("OAUTH2_SECRET_KEY", "")
@@ -15,11 +16,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 43200
 
 # The scheme itself returns a str (i.e., the token) when called
 # OAuth2PasswordBearer seems to have handled the conversion of token_dict -> token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/admin/token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/admin/token")
 # optional_oauth2_scheme = OAuth2PasswordBearer(
 #     tokenUrl="api/admin/token",
 #     auto_error=False
 # )
+
+oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="api/admin/token")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -50,6 +53,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 # The login function is directly bound to the token endpoint in app.py
 # Note that the response_model is Token (auto-converted from token_dict)
 async def login_for_access_token(
+    response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> dict[str, str]:
     user_controller = get_util_registry().get_util(module="user_controller")
@@ -77,9 +81,20 @@ async def login_for_access_token(
         data={"sub": user.username},
         expires_delta=access_token_expires
     )
+
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}", httponly=True)
+
     token_dict = {
         "access_token": access_token,
         "token_type": "bearer"
     }
 
     return token_dict
+
+
+async def logout(response: Response):
+    response.delete_cookie("access_token")
+
+    return {"status": "Successfully logged out!"}
