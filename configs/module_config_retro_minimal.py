@@ -14,6 +14,7 @@ module_config = {
         "forward_wldn5": False,
         "general_selectivity": False,
         "impurity_predictor": False,
+        "molecular_complexity": True,
         "pathway_ranker": True,
         "pmi_calculator": True,
         "qm_descriptors": False,
@@ -265,6 +266,20 @@ module_config = {
             "default_prediction_url": "http://0.0.0.0:9691/impurity",
             "custom_prediction_url": "",
             "timeout": 180,
+            "available_model_names": []
+        }
+    },
+    
+    "molecular_complexity": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/molecular_complexity.git",
+        "description": "Molecular complexity calculator",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_gpu": False,
+            "ports_to_expose": [9751],
+            "default_prediction_url": "http://0.0.0.0:9751/molecular_complexity",
+            "custom_prediction_url": "",
+            "timeout": 30,
             "available_model_names": []
         }
     },
