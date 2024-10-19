@@ -28,7 +28,8 @@ module_config = {
         "solubility": True,
         "tree_search_expand_one": True,
         "tree_search_mcts": True,
-        "tree_search_retro_star": True
+        "tree_search_retro_star": True,
+        "value_network": True
     },
 
     "global": {
@@ -508,6 +509,23 @@ module_config = {
             "custom_prediction_url": "",
             "timeout": 1200,
             "available_model_names": []
+        }
+    },
+
+    "value_network": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/value_network.git",
+        "description":
+            "Value Network for the Retro* planner",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_gpu": False,
+            "ports_to_expose": [9350],
+            "default_prediction_url": "http://0.0.0.0:9350/predictions",
+            "custom_prediction_url": "",
+            "timeout": 10,
+            "available_model_names": [
+                "USPTO_FULL"
+            ]
         }
     },
 
