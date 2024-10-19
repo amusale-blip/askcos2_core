@@ -184,7 +184,7 @@ class BuildTreeOptions(LowerCamelAliasModel):
     )
 
     use_value_network: bool | None = Field(
-        default=False,
+        default=True,
         description="whether to use value_network for Vm computation"
     )
 
