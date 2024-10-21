@@ -109,6 +109,8 @@ class AtomMapController(BaseWrapper):
                     result.append(r.mapped_rxn)
                 except TypeError:
                     result.append(None)
+                except AttributeError:
+                    result.append(None)
         else:
             raise ValueError(f"Unsupported atom map backend: {backend}!")
 
