@@ -161,7 +161,8 @@ def precompute_fingerprints() -> None:
                 "template_set": template_set
             })
 
-    # Indexing.. Also taking too long
+    mol_collection.create_index("product_smiles")
+    # Additional indexing.. Also taking too long
     # mol_collection.create_index("mfp_bits")
     # mol_collection.create_index("mfp_count")
     # mol_collection.create_index("pfp_bits")
