@@ -73,6 +73,12 @@ class Reactions:
         mol = Chem.MolFromSmiles(smiles)
         if not mol:
             return []
+
+        # proper canonicalization by removing atom mapping first
+        for a in mol.GetAtoms():
+            a.ClearProp("molAtomMapNumber")
+            a.SetIsotope(0)
+
         canonical_smiles = Chem.MolToSmiles(mol)
 
         query = {
