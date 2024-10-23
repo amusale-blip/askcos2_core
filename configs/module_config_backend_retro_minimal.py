@@ -19,6 +19,7 @@ module_config = {
         "qm_descriptors": False,
         "reaction_classification": True,
         "retro_augmented_transformer": False,
+        "retro_exact_match": False,
         "retro_graph2smiles": False,
         "retro_retrosim": False,
         "retro_template_relevance": True,
@@ -343,6 +344,24 @@ module_config = {
             "available_model_names": [
                 "pistachio_23Q3",
                 "USPTO_FULL"
+            ]
+        }
+    },
+
+    "retro_exact_match": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/retro/exact_match.git",
+        "description":
+            "One-step retrosynthesis model using exact match",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_gpu": False,
+            "ports_to_expose": [9451],
+            "default_prediction_url": "http://0.0.0.0:9451/predictions",
+            "custom_prediction_url": "",
+            "timeout": 30,
+            "available_model_names": [
+                "USPTO_FULL",
+                "bkms"
             ]
         }
     },
