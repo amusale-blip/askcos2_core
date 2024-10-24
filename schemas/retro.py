@@ -7,7 +7,11 @@ from typing import Any, Literal
 
 class RetroBackendOption(LowerCamelAliasModel):
     retro_backend: Literal[
-        "augmented_transformer", "graph2smiles", "template_relevance", "retrosim"
+        "augmented_transformer",
+        "exact_match",
+        "graph2smiles",
+        "template_relevance",
+        "retrosim"
     ] = Field(
         default="template_relevance",
         description="backend for one-step retrosynthesis"
