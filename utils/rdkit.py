@@ -5,11 +5,12 @@ from pydantic import BaseModel
 from rdchiral.initialization import rdchiralReactants, rdchiralReaction
 from rdchiral.main import rdchiralRun
 from rdkit import Chem
-from rdkit.Chem import Descriptors, rdDepictor
+from rdkit.Chem import Descriptors, rdDepictor, SDWriter, AllChem
 from typing import Any
 from utils import register_util
 from utils.draw_impl import align_molecule
 from utils.registry import get_util_registry
+from io import StringIO
 
 
 class SmilesInput(BaseModel):
@@ -73,8 +74,9 @@ class RDKitUtil:
         "validate": ["POST"],
         "from_molfile": ["POST"],
         "to_molfile": ["POST"],
+        "to_sdfile": ["POST"],
         "apply_one_template": ["POST"],
-        "apply_one_template_by_idx": ["POST"]
+        "apply_one_template_by_idx": ["POST"],
     }
 
     def __init__(self, util_config: dict[str, Any] = None):
@@ -306,3 +308,40 @@ class RDKitUtil:
         )
 
         return async_return
+    
+    @staticmethod
+    async def to_sdfile(smiles: str)-> Response:
+        resp = {}
+        mol = Chem.MolFromSmiles(smiles)
+        if not mol:
+            resp["error"] = "Cannot parse smiles with rdkit."
+
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        
+        mol_with_hs = Chem.AddHs(mol)
+
+        AllChem.EmbedMolecule(mol_with_hs)
+        AllChem.UFFOptimizeMolecule(mol_with_hs)
+    
+        sdf_buffer = StringIO()
+        writer = SDWriter(sdf_buffer)
+        writer.write(mol_with_hs)
+        writer.close()
+    
+        sdf_content = sdf_buffer.getvalue()
+        sdf_buffer.close()
+
+        resp["sdf"] = sdf_content
+
+        return Response(
+            content=json.dumps(resp),
+            status_code=200,
+            media_type="application/json"
+        )
+        
+
+
