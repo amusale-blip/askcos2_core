@@ -498,6 +498,8 @@ import_volume() {
   filename=$3
   volume_name=${COMPOSE_PROJECT_NAME}_${volume}
   docker run --rm -v "${volume_name}":/dest -v "${directory}":/src alpine tar -xzf /src/"${filename}" -C /dest --strip 1
+  docker run --rm -it -v deploy_askcosv2_mongo_data:/dest -v /home/ubuntu:/src alpine
+  tar -xzf /src/"${filename}" -C /dest --strip 1
 }
 
 backup() {
@@ -519,6 +521,19 @@ restore() {
   echo "This may take a few minutes..."
   import_volume askcosv2_mongo_data "${BACKUP_DIR}" mongo_data.tar.gz
   echo "Restore complete."
+}
+
+mongodump() {
+  if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="$(pwd)/backup/$(date +%Y%m%d%s)"
+  fi
+  mkdir -p "${BACKUP_DIR}"
+  echo "Dumping mongo database contents to ${BACKUP_DIR}"
+  echo "This may take a few minutes..."
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongodump --host=${MONGO_HOST} --username=${MONGO_USER} --password=${MONGO_PW} --authenticationDatabase=admin --archive=/data/mongo_dump.gz --gzip'
+  docker cp "${COMPOSE_PROJECT_NAME}"-mongo-1:/data/mongo_dump.gz "$BACKUP_DIR"
+  echo "Dumping complete."
 }
 
 post-update-message() {
@@ -544,7 +559,7 @@ else
     case "$arg" in
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
       start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
-      backup | restore | index-db | diff-env | post-update-message | old-messages | get-images | download-db-data)
+      backup | restore | mongodump | index-db | diff-env | post-update-message | old-messages | get-images | download-db-data)
         # This is a defined function, so execute it
         $arg
         ;;
