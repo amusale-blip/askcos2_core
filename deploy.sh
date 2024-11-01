@@ -536,6 +536,22 @@ mongodump() {
   echo "Dumping complete."
 }
 
+mongorestore() {
+  if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="$(pwd)/backup/$(ls -t backup | head -1)"
+  fi
+  echo "Restoring data from ${BACKUP_DIR}"
+  echo "This may take a few minutes..."
+  echo "Starting the mongo container for seeding db"
+  docker compose -f compose.yaml up -d mongo
+  sleep 3
+  docker cp "$BACKUP_DIR"/mongo_dump.gz "${COMPOSE_PROJECT_NAME}"-mongo-1:/data/mongo_dump.gz
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongorestore --host=${MONGO_HOST} --username=${MONGO_USER} --password=${MONGO_PW} --authenticationDatabase=admin --gzip --archive=/data/mongo_dump.gz'
+  echo "Restore complete."
+  docker compose -f compose.yaml rm -sf mongo
+}
+
 post-update-message() {
   echo
   echo -e "\033[92m================================================================================\033[00m"
