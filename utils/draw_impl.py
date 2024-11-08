@@ -11,7 +11,14 @@ from rdkit.Chem import rdAbbreviations, rdChemReactions, rdDepictor, rdFMCS
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry import rdGeometry
 
-ABBREVIATIONS = rdAbbreviations.GetDefaultAbbreviations()
+from draw_abbreviations import CUSTOM_ABBREVIATIONS
+
+ABBREVIATIONS = rdAbbreviations.ParseAbbreviations(
+    CUSTOM_ABBREVIATIONS
+)
+
+for abbrev in rdAbbreviations.GetDefaultAbbreviations():
+    ABBREVIATIONS.append(abbrev)
 
 HIGHLIGHT_COLORS = [
     (153 / 255, 221 / 255, 255 / 255),  # baby-blue
