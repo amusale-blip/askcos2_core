@@ -11,7 +11,7 @@ from rdkit.Chem import rdAbbreviations, rdChemReactions, rdDepictor, rdFMCS
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry import rdGeometry
 
-from draw_abbreviations import CUSTOM_ABBREVIATIONS
+from utils.draw_abbreviations import CUSTOM_ABBREVIATIONS
 
 ABBREVIATIONS = rdAbbreviations.ParseAbbreviations(
     CUSTOM_ABBREVIATIONS
