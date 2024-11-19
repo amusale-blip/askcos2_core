@@ -488,7 +488,7 @@ class MCTSWrapper(BaseWrapper):
         else:
             min_history = None
 
-        dict_input.update({
+        dict_input["build_tree_options"].update({
             "max_ppg": max_ppg,
             "max_scscore": max_scscore,
             "max_elements": max_elements,
