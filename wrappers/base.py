@@ -123,14 +123,19 @@ class BaseWrapper:
         # Hook for logging function (thus API) calls
         _methods_to_log = super().__getattribute__("methods_to_log")
         if item in _methods_to_log:
-            _collection = super().__getattribute__("logs_collection")
-            _wrapper_name = super().__getattribute__("name")
-            query = {"method": f"{_wrapper_name}.{item}"}
-            dt = date.today().strftime("%y%m%d")
-            _collection.update_one(
-                query,
-                {"$inc": {f"count.{dt}": 1}},
-                upsert=True
-            )
+            try:
+                _collection = super().__getattribute__("logs_collection")
+                _wrapper_name = super().__getattribute__("name")
+                query = {"method": f"{_wrapper_name}.{item}"}
+                dt = date.today().strftime("%y%m%d")
+                _collection.update_one(
+                    query,
+                    {"$inc": {f"count.{dt}": 1}},
+                    upsert=True
+                )
+            except AttributeError:
+                # logs_collection might not have been created for weird mongo issue
+                # for now simply skip logging for robustness
+                pass
 
         return super().__getattribute__(item)
