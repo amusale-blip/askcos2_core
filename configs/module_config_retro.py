@@ -9,6 +9,7 @@ module_config = {
         "descriptors": False,
         "evaluate_reactions": False,
         "fast_filter": True,
+        "fastsolv": False,
         "forward_augmented_transformer": False,
         "forward_graph2smiles": False,
         "forward_wldn5": False,
@@ -183,6 +184,20 @@ module_config = {
             "fast_filter_with_threshold",
             "fast_filter_batch"
         ]
+    },
+
+    "fastsolv": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/fastsolv.git",
+        "description": "Fast Solv model for solubility",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_gpu": False,
+            "ports_to_expose": [9761],
+            "default_prediction_url": "http://0.0.0.0:9761/fastsolv",
+            "custom_prediction_url": "",
+            "timeout": 30,
+            "available_model_names": []
+        }
     },
 
     "forward_augmented_transformer": {
