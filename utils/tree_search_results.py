@@ -38,6 +38,14 @@ class TreeSearchSavedResults(BaseModel):
     public: bool = False
     shared_with: list[str] = Field(default_factory=list)
 
+class UDS(BaseModel):
+    node_dict: dict
+    uuid2smiles: dict
+    graph: dict
+    pathways: list[dict]
+
+class Metadata(BaseModel):
+    uds: UDS
 
 @register_util(name="tree_search_results_controller")
 class TreeSearchResultsController:
@@ -48,6 +56,7 @@ class TreeSearchResultsController:
     methods_to_bind: dict[str, list[str]] = {
         "list": ["GET"],
         "retrieve": ["GET"],
+        "retrieve_pathway_metadata": ["POST"],
         "create": ["POST"],
         "update": ["PUT"],
         "destroy": ["DELETE"],
@@ -109,6 +118,21 @@ class TreeSearchResultsController:
             results.append(result)
 
         return results
+
+    def retrieve_pathway_metadata(self, result: dict, pathways_properties_only=True):
+        try:
+            Metadata(**result)
+        except Exception as e:
+            raise HTTPException(
+                status_code=404,
+                detail=f"{e}"
+            )
+        result = standardize_result(result)
+        if pathways_properties_only:
+            return result["uds"]["pathways_properties"]
+        else:
+            return result
+
 
     def retrieve(self, result_id: str, token: Annotated[str, Depends(oauth2_scheme)]
                  ) -> TreeSearchSavedResults:

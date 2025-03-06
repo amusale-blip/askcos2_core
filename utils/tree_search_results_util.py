@@ -196,36 +196,65 @@ def calculate_path_metadata(paths, graph):
                                   for smi in precursor_smiles)
             path.graph["atom_economy"] = target_molwt / precursor_molwt
 
+def uds2conn(uds: dict, format: str = ["graph", "unified_tree","pathways"]):
+    node_dict = uds["node_dict"]
+    uuid2smiles = uds["uuid2smiles"]
+    connectivity = uds[format]
+    
+    if format == "graph":
+        node_list = [prop for _, prop in node_dict.items()]
+        data = {
+            "directed": True,
+            "multigraph": False,
+            "nodes": node_list,
+            "links": connectivity
+        }
+        graph = nx.node_link_graph(data)
+        return graph
+    elif format == "pathways":
+        pathways = []
+        for path_edges in connectivity:
+            path_node_dict = {}
+            for edge in path_edges:
+                source_uuid = edge["source"]
+                target_uuid = edge["target"]
+                source_smiles = uuid2smiles[source_uuid]
+                target_smiles = uuid2smiles[target_uuid]
+                new_source_dict = {k:v for k, v in node_dict[source_smiles].items() if k != 'id'}
+                new_target_dict = {k:v for k, v in node_dict[target_smiles].items() if k != 'id'}
+                path_node_dict[source_uuid] = new_source_dict
+                path_node_dict[target_uuid] = new_target_dict
+
+            path_node_list = [{'id': node, **prop} for node, prop in path_node_dict.items()]
+            data = {
+                "directed": True,
+                "multigraph": False,
+                "nodes": path_node_list,
+                "links": path_edges
+            }
+            path = nx.node_link_graph(data)
+            pathways.append(path)
+        return pathways
+
 
 def standardize_result_v2(result: dict) -> tuple[dict, list]:
     """
     Takes a v2 tree builder result and convert to standard format for frontend.
     """
-    data_graph = result["graph"]
-    paths = result["paths"]
-
-    if paths:
-        paths = json_to_nx_paths(paths)
-
-    graph = nx.node_link_graph(data_graph)
+    graph = uds2conn(result['uds'], "graph")
+    paths = uds2conn(result['uds'], "pathways")
 
     # Updates graph in place
     augment_v2_graph(graph)
 
     # Calculate some pathway metadata
     calculate_path_metadata(paths, graph)
+    for i, path in enumerate(paths):
+        pathway_property = graph_to_json(path, strip=True).get("graph", {})
+        result["uds"]["pathways_properties"][i].update(pathway_property)
 
-    data_graph = nx.node_link_data(graph)
-    paths = [graph_to_json(path, strip=True) for path in paths]
-
-    return data_graph, paths
+    return result
 
 
 def standardize_result(result_doc: dict) -> dict:
-    standardized_graph, standardized_paths = standardize_result_v2(result_doc)
-    result_doc.update({
-        "graph": standardized_graph,
-        "paths": standardized_paths
-    })
-
-    return result_doc
+    return standardize_result_v2(result_doc)

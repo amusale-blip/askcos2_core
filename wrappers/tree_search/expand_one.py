@@ -86,8 +86,6 @@ class ModelReactionProperties(BaseModel):
     plausibility: float
     reacting_atoms: list[int] | None
     selec_error: bool | None
-    reaction_smiles: str | None
-
 
 class RetroResult(BaseModel):
     # from retro_controller

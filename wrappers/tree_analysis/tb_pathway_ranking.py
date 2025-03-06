@@ -67,8 +67,9 @@ def _tb_pathway_ranking(
             min_samples=min_samples,
             min_cluster_size=min_cluster_size
         )
-        results = pathway_ranker.call_sync(wrapper_input).result
-        results = results.dict()
+        response = pathway_ranker.call_sync(wrapper_input)
+        assert bool(response.result), response.message
+        results = response.result.dict()
     except Exception as e:
         traceback.format_exc()
         output["success"] = False
