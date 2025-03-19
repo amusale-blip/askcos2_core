@@ -63,10 +63,6 @@ class ExpandOneInput(LowerCamelAliasModel):
         description="whether to perform quick selectivity check "
                     "by reverse application of the forward template"
     )
-    group_by_strategy: bool = Field(
-        default=False,
-        description="whether to group the returned results by strategies"
-    )
 
 class ModelMetadata(BaseModel):
     direction: str
@@ -252,19 +248,6 @@ class ExpandOneWrapper(BaseWrapper):
             message = f"Backend error encountered during expand_one.call_raw() " \
                       f"with the following error message {output.error}"
             result = None
-
-        if output.status == "SUCCESS" and input.group_by_strategy:
-            grouped_results = {}
-            for i, strategy in enumerate(input.retro_backend_options):
-                grouped_result = []
-                for prediction in result:
-                    if (
-                        prediction.retro_backend == strategy.retro_backend and
-                        prediction.retro_model_name == strategy.retro_model_name
-                    ):
-                        grouped_result.append(prediction)
-                grouped_results[i] = grouped_result
-            result = grouped_results
 
         response = ExpandOneResponse(
             status_code=status_code,
