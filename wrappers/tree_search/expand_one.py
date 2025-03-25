@@ -82,6 +82,8 @@ class ModelReactionProperties(BaseModel):
     plausibility: float
     reacting_atoms: list[int] | None
     selec_error: bool | None
+    cluster_id: int | None
+    cluster_name: str | None
 
 class RetroResult(BaseModel):
     # from retro_controller
