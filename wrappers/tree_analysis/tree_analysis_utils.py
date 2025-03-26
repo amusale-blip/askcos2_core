@@ -8,33 +8,7 @@ NODE_LINK_ATTRS = {
     "key": "key",
     "link": "edges",
 }
-# Map from keys used by tree builder graph to name used in pathways
-PATH_KEY_DICT = {
-    "smiles": "smiles",
-    "type": "type",
-    "id": "id",
-    "as_reactant": "as_reactant",
-    "as_product": "as_product",
-    "plausibility": "plausibility",
-    "forward_score": "forward_score",   # From graph optimization
-    "ppg": "ppg",           # If calling clean_json on a previously cleaned tree
-    "purchase_price": "ppg",
-    "properties": "properties",
-    "template_score": "template_score",
-    "terminal": "terminal",
-    "tforms": "tforms",
-    "tsources": "tsources",
-    "num_examples": "num_examples",
-    "necessary_reagent": "necessary_reagent",
-    "precursor_smiles": "precursor_smiles",
-    "rms_molwt": "rms_molwt",
-    "num_rings": "num_rings",
-    "scscore": "scscore",
-    "rank": "rank",
-    "class_num": "class_num",
-    "class_name": "class_name",
-}
-# List of all keys to include in output JSON
+
 OUTPUT_KEYS = {
     "chemical": [
         "smiles",
@@ -50,20 +24,34 @@ OUTPUT_KEYS = {
         "id",
         "plausibility",
         "forward_score",
-        "template_score",
-        "tforms",
-        "tsources",
-        "num_examples",
-        "necessary_reagent",
-        "precursor_smiles",
-        "rms_molwt",
-        "num_rings",
-        "scscore",
-        "rank",
-        "class_num",
-        "class_name",
+        "model_metadata",
+        "precursor_properties",
+        "precursor_rank",
+        "precursor_score",
+        "reaction_properties"
     ],
 }
+
+# Map from keys used by tree builder graph to name used in pathways
+PATH_KEY_DICT = {
+    "smiles": "smiles",
+    "type": "type",
+    "id": "id",
+    "as_reactant": "as_reactant",
+    "as_product": "as_product",
+    "plausibility": "plausibility",
+    "forward_score": "forward_score",   # From graph optimization
+    "ppg": "ppg",               # If calling clean_json on a previously cleaned tree
+    "purchase_price": "ppg",
+    "rxn_score_from_model": "rxn_score_from_model",
+    "terminal": "terminal",
+    "model_metadata": "model_metadata",
+    "precursor_properties": "precursor_properties",
+    "precursor_rank": "precursor_rank",
+    "precursor_score": "precursor_score",
+    "reaction_properties": "reaction_properties"
+}
+
 
 
 def clean_json(path):

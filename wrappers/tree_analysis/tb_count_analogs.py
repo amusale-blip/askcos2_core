@@ -4,6 +4,12 @@ from wrappers.count_analogs.default import CountAnalogsInput
 from wrappers.tree_analysis.tree_analysis_utils import NODE_LINK_ATTRS
 from wrappers.registry import get_wrapper_registry
 from utils.registry import get_util_registry
+from utils.tree_search_results_util import uds2conn
+from wrappers.tree_analysis.tree_analysis_utils import (
+    clean_json,
+    NIL_UUID,
+    NODE_LINK_ATTRS
+)
 
 
 def _tb_count_analogs_combinations(
@@ -65,37 +71,24 @@ def _tb_count_analogs(
         dict, dict: result document and info dict with success and error fields
     """
 
-    if index == -1:
-        trees = tb_result["paths"]
-    else:
-        trees = [tb_result["paths"][index]]
 
     output = {
         "success": True,
         "error": None,
     }
-
     try:
-        if trees:
-            if "nodes" in trees[0]:
-                graph_paths = [
-                    nx.node_link_graph(tree, attrs=NODE_LINK_ATTRS) for tree in trees
-                ]
-            else:
-                output["success"] = False
-                output["error"] = "count_analogs only support paths in " \
-                                  "nodelink format, but not treedata format"
-
-                return tb_result, output
+        if index == -1:
+            trees_nx = uds2conn(tb_result['uds'], "pathways")
         else:
-            output["success"] = False
-            output["error"] = "Requested result does not have any paths to count."
-
-            return tb_result, output
+            trees_nx = [uds2conn(tb_result['uds'], "pathways")[index]]
+        
+        # count analogs only support nodelink format
+        graph_paths = trees_nx
 
     except Exception as e:
         output["success"] = False
-        output["error"] = "Unable to load requested result."
+        output["error"] = f"Unable to load requested result." \
+                        f"{tb.format_exc()}"
         print("Counting analogs failed for tree builder result:", str(e))
 
         return tb_result, output
@@ -113,21 +106,24 @@ def _tb_count_analogs(
             )
     except Exception as e:
         output["success"] = False
-        output["error"] = "Analog counting failed."
+        output["error"] = f"Analog counting failed." \
+                          f"{tb.format_exc()}"
         tb.print_exc()
 
         return tb_result, output
 
     try:
-        # Update target chemical nodes in every tree
-        for i, tree in enumerate(trees):
-            # Key for graph attributes based on JSON format
-            key = "graph" if "nodes" in tree else "attributes"
-            tree.setdefault(key, {})["num_analogs"] = num_analogs[i]
-
+        pathways_properties = tb_result["uds"]["pathways_properties"]
+        if index == -1:
+            for i, pathway_prop in enumerate(pathways_properties):
+                pathway_prop["num_analogs"] = num_analogs[i]
+        else:
+            pathways_properties[index]["num_analogs"] = num_analogs[0]
+            
     except Exception as e:
         output["success"] = False
-        output["error"] = "Analog counting result processing failed."
+        output["error"] = f"Analog counting result processing failed." \
+                        f"{tb.format_exc()}"
         tb.print_exc()
 
         return tb_result, output

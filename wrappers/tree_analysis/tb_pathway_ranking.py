@@ -2,11 +2,13 @@ import networkx as nx
 import traceback
 from wrappers.pathway_ranker.default import PathwayRankerInput
 from wrappers.registry import get_wrapper_registry
+from utils.tree_search_results_util import uds2conn
 from wrappers.tree_analysis.tree_analysis_utils import (
     clean_json,
     NIL_UUID,
     NODE_LINK_ATTRS
 )
+
 
 
 def _tb_pathway_ranking(
@@ -30,29 +32,18 @@ def _tb_pathway_ranking(
         "error": None,
     }
 
+    # TODO: Consolidate tree processing with duplicate code in results API
+    
     try:
-        # TODO: Consolidate tree processing with duplicate code in results API
-        trees = tb_result["paths"]
-        if trees:
-            if "nodes" in trees[0]:
-                # Convert paths to tree data format for pathway ranking
-                graph_paths = [
-                    nx.node_link_graph(tree, attrs=NODE_LINK_ATTRS) for tree in trees
-                ]
-                json_paths = [
-                    clean_json(nx.tree_data(tree, NIL_UUID)) for tree in graph_paths
-                ]
-            else:
-                json_paths = trees
-        else:
-            output["success"] = False
-            output["error"] = "Requested result does not have any paths to rank."
-
-            return tb_result, output
+        trees_nx = uds2conn(tb_result['uds'], "pathways")
+        json_paths = [
+            clean_json(nx.tree_data(tree, NIL_UUID)) for tree in trees_nx
+        ]
     except Exception as e:
         traceback.print_tb(e.__traceback__)
         output["success"] = False
-        output["error"] = "Unable to load requested result."
+        output["error"] = f"Unable to load requested result. Traceback: " \
+                          f"{traceback.format_exc()}"
         print("Pathway ranking failed for tree builder result:", str(e))
 
         return tb_result, output
@@ -79,13 +70,10 @@ def _tb_pathway_ranking(
         return tb_result, output
 
     try:
-        # Update original JSON paths directly to keep same format
-        for i, tree in enumerate(trees):
-            # Key for graph attributes based on JSON format
-            key = "graph" if "nodes" in tree else "attributes"
-            tree.setdefault(key, {})["score"] = results["scores"][i]
-            if clustering:
-                tree[key]["cluster_id"] = results["clusters"][i]
+        pathways_properties = tb_result['uds']["pathways_properties"]
+        for i, pathway_prop in enumerate(pathways_properties):
+            pathway_prop["score"] = results["scores"][i]
+            pathway_prop["cluster_id"] = results["clusters"][i]
     except Exception as e:
         traceback.format_exc()
         output["success"] = False
