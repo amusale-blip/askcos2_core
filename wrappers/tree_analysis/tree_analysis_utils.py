@@ -111,7 +111,7 @@ def clean_json(path):
     return output
 
 
-def nx_paths_to_json(paths, root_uuid, json_format="treedata"):
+def nx_paths_to_json(paths, root_uuid, json_format="nodelink"):
     """
     Convert list of paths from networkx graphs to json.
     """
