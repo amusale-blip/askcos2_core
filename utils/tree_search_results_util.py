@@ -116,6 +116,23 @@ def augment_v2_graph(graph):
             # Calculate molecular weight
             node_data["molwt"] = molecular_weight(node)
 
+def augment_v2_uds(node_dict):
+    """
+    Add missing metadata from v2 graph.
+
+    If ``extra=True``, computes additional metadata which is
+    computed at runtime by the Python tree builder, but not by
+    the C++ tree builder.
+
+    Args:
+        graph (nx.Graph): networkx graph to update metadata for
+        extra (optional, bool): compute extra metadata
+    """
+    for node, node_data in node_dict.items():
+        if node_data["type"] == "chemical":
+            # Calculate molecular weight
+            node_data["molwt"] = molecular_weight(node)
+
 
 def calculate_path_metadata(paths, graph):
     """
@@ -241,11 +258,12 @@ def standardize_result_v2(result: dict) -> tuple[dict, list]:
     """
     Takes a v2 tree builder result and convert to standard format for frontend.
     """
-    graph = uds2conn(result['uds'], "graph")
-    paths = uds2conn(result['uds'], "pathways")
+    graph = uds2conn(result["uds"], "graph")
+    paths = uds2conn(result["uds"], "pathways")
 
     # Updates graph in place
     augment_v2_graph(graph)
+    augment_v2_uds(result["uds"]["node_dict"]) # update uds node dictionary  
 
     # Calculate some pathway metadata
     calculate_path_metadata(paths, graph)
