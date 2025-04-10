@@ -165,8 +165,9 @@ class TreeSearchResultsController:
             result["_id"] = str(result["_id"])
 
             if result["result_type"] == "ipp":
+                result["result"] = standardize_result_ipp(result["result"])
                 try:
-                    result["result"] = standardize_result_ipp(result["result"])
+                    pass
                 except:
                     # return results without formatting - frontend 
                     raise HTTPException(
