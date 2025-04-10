@@ -276,17 +276,17 @@ def model_metadata_population(node_dict):
         backend = node_dict.get("retro_backend")
         model_name = node_dict.get("retro_model_name")
         model_score = node_dict.get("rxn_score_from_model")
-        models_predicted_by = [backend, model_name, model_score]
+        models_predicted_by = [[backend, model_name, model_score]]
     elif node_dict.get("model") and node_dict.get("trainingSet"): # ipp result
         backend = node_dict.get("model")
         model_name = node_dict.get("trainingSet")
         model_score = node_dict.get("templateScore")
-        models_predicted_by = [backend, model_name, model_score]
+        models_predicted_by = [[backend, model_name, model_score]]
 
     model_metadata_list = []
     for model_info in models_predicted_by:
         backend, model_name, model_score = model_info
-
+        
         template = {
             "count": node_dict.get("count"),
             "dimer_only": node_dict.get("dimer_only"),
