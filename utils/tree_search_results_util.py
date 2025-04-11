@@ -277,7 +277,7 @@ def model_metadata_population(node_dict):
         model_name = node_dict.get("retro_model_name")
         model_score = node_dict.get("rxn_score_from_model")
         models_predicted_by = [[backend, model_name, model_score]]
-    elif node_dict.get("model") and node_dict.get("trainingSet"): # ipp result
+    elif node_dict.get("model") and node_dict.get("trainingSet"): # old ipp result
         backend = node_dict.get("model")
         model_name = node_dict.get("trainingSet")
         model_score = node_dict.get("templateScore")
@@ -310,22 +310,22 @@ def model_metadata_population(node_dict):
             "model_score": model_score,
             "normalized_model_score": model_score,
             "rank": node_dict.get("rank"),
-            "reaction_id": None,
-            "reaction_set": None,
+            "reaction_id": node_dict.get("reaction_id"),
+            "reaction_set": node_dict.get("reaction_set"),
         }
 
         if backend == "template_relevance":
             model_metadata.update({
                 "source": {
                     "template": node_dict.get("template", template),
-                    "reaction": None
+                    "reaction_data": None
                 }
             })
         elif backend == "retrosim":
             model_metadata.update({
                 "source": {
                     "template": {},
-                    "reaction": node_dict.get("reaction")
+                    "reaction_data": node_dict.get("reaction_data")
                 }
             })
         else:
@@ -360,7 +360,9 @@ def expand_one_conversion(node_dict):
             "cluster_name": node_dict.get("group_name")
         },
         "type": node_dict["type"],
-        "id": node_dict.get("smiles") or node_dict.get("id")
+        "id": node_dict.get("smiles") or node_dict.get("id"),
+        "class_num": node_dict.get("class_num"),
+        "class_name": node_dict.get("class_name")
     }
     return new_node_dict
 

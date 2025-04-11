@@ -127,7 +127,7 @@ class TreeSearchResultsController:
                 status_code=404,
                 detail=f"{e}"
             )
-        result = standardize_result(result)
+        result = standardize_result_tb(result)
         if pathways_properties_only:
             return result["uds"]["pathways_properties"]
         else:
