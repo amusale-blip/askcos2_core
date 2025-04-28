@@ -33,8 +33,16 @@ class FastSolvOutput(BaseModel):
     results: list[FastSolvResult]
 
 
+class ConvertedSolubilityResult:
+    Solvent: str
+    Solute: str
+    Temp: float
+    log_st_1: str
+    uncertainty: float
+
 class FastSolvResponse(BaseModel):
-    result: list[FastSolvResult]
+    # result: list[FastSolvResult]
+    __root__: list[ConvertedSolubilityResult]
 
 
 @register_wrapper(
@@ -66,12 +74,29 @@ class FastSolvWrapper(BaseWrapper):
         return await super().retrieve(task_id=task_id)
 
     @staticmethod
-    def convert_output_to_response(output: FastSolvOutput
+    def _convert_fastsolv_to_solubility(
+        old_results: list[FastSolvResult]
+    ) -> list[ConvertedSolubilityResult]:
+        converted_results = []
+        for r in old_results:
+            converted_result = ConvertedSolubilityResult(
+                Solvent=r.solvent_smiles,
+                Solute=r.solute_smiles,
+                Temp=r.temperature,
+                log_st_1=r.predicted_logS,
+                uncertainty=r.predicted_logS_stdev
+            )
+            converted_results.append(converted_result)
+
+        return converted_results
+
+    def convert_output_to_response(self, output: FastSolvOutput
                                    ) -> FastSolvResponse:
         if output.status == "SUCCESS":
             status_code = 200
             message = ""
             result = output.results
+            result = self._convert_fastsolv_to_solubility(result)
         else:
             status_code = 500
             message = f"Backend error encountered in fastsolv " \
