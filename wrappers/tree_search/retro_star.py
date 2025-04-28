@@ -246,11 +246,16 @@ class RetroStarInput(LowerCamelAliasModel):
     run_async: bool = False
     result_id: str = str(uuid.uuid4())
 
+class UDS(BaseModel):
+    node_dict: dict
+    uuid2smiles: dict
+    graph: list[dict]
+    pathways: list[list[dict]]
+    pathways_properties: list[dict]
 
 class RetroStarResult(BaseModel):
     stats: dict[str, Any] | None
-    paths: list[dict[str, Any]] | None
-    graph: dict[str, Any] | None
+    uds: UDS | None
     version: int | str | None = "retro_star_0"
     result_id: str = ""
 

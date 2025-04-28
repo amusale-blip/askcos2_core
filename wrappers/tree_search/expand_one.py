@@ -63,40 +63,37 @@ class ExpandOneInput(LowerCamelAliasModel):
         description="whether to perform quick selectivity check "
                     "by reverse application of the forward template"
     )
-    group_by_strategy: bool = Field(
-        default=False,
-        description="whether to group the returned results by strategies"
-    )
 
+class ModelMetadata(BaseModel):
+    direction: str
+    backend: str
+    model_name: str
+    attributes: dict
+    model_score: float
+    normalized_model_score: float
+    rank: int
+    reaction_id: str | None
+    reaction_set: str | None
+    source: dict
+
+class ModelReactionProperties(BaseModel):
+    canonical_reaction_smiles: str
+    mapped_smiles: str
+    plausibility: float
+    reacting_atoms: list[int] | None
+    selec_error: bool | None
+    cluster_id: int | None
+    cluster_name: str | None
 
 class RetroResult(BaseModel):
     # from retro_controller
+    average_model_score: float
+    model_metadata: list[ModelMetadata]
     outcome: str
-    model_score: float
-    normalized_model_score: float
-    template: dict[str, Any] | None
-    reaction_data: dict[str, Any] | None
-
-    # extended from postprocessing in expand_one_controller
-    retro_backend: str
-    retro_model_name: str
-    models_predicted_by: list[tuple[str, str, float]]
-    plausibility: float | None
-    rms_molwt: float
-    num_rings: int
-    scscore: float
-    group_id: int | None
-    group_name: str | None
-    mapped_smiles: str | None
-    reacting_atoms: list[int] | None
-
-    selec_error: bool | None
-    outcomes: str | None
-    mapped_outcomes: str | None
-    mapped_precursors: str | None
-
-    score: float
-    rank: int
+    precursor_properties: dict
+    precursor_rank: int
+    precursor_score: float
+    reaction_properties: ModelReactionProperties
 
 
 class ExpandOneOutput(BaseModel):
@@ -253,19 +250,6 @@ class ExpandOneWrapper(BaseWrapper):
             message = f"Backend error encountered during expand_one.call_raw() " \
                       f"with the following error message {output.error}"
             result = None
-
-        if output.status == "SUCCESS" and input.group_by_strategy:
-            grouped_results = {}
-            for i, strategy in enumerate(input.retro_backend_options):
-                grouped_result = []
-                for prediction in result:
-                    if (
-                        prediction.retro_backend == strategy.retro_backend and
-                        prediction.retro_model_name == strategy.retro_model_name
-                    ):
-                        grouped_result.append(prediction)
-                grouped_results[i] = grouped_result
-            result = grouped_results
 
         response = ExpandOneResponse(
             status_code=status_code,

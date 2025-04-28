@@ -1,7 +1,9 @@
 import networkx as nx
 import traceback
+from collections import defaultdict
 from wrappers.reaction_classification.get_top_class_batch import GetTopClassBatchInput
 from wrappers.registry import get_wrapper_registry
+from utils.tree_search_results_util import uds2conn
 from wrappers.tree_analysis.tree_analysis_utils import (
     NIL_UUID,
     NODE_LINK_ATTRS,
@@ -21,65 +23,50 @@ def _tb_reaction_classification(tb_result: dict) -> tuple[dict, dict]:
         "success": True,
         "error": None,
     }
-    json_format = "nodelink"
-    try:
-        # TODO: Consolidate tree processing with duplicate code in results API
-        graph = nx.node_link_graph(tb_result["graph"])  # Full reaction network
-        trees = tb_result["paths"]
-        if trees:
-            if "nodes" in trees[0]:
-                trees = [
-                    nx.node_link_graph(tree, attrs=NODE_LINK_ATTRS) for tree in trees
-                ]
-            else:
-                json_format = "treedata"
-                trees = [tree_data_to_graph(tree) for tree in trees]
-    except Exception as e:
-        traceback.print_tb(e.__traceback__)
-        output["success"] = False
-        output["error"] = "Unable to load requested result."
-        print("Reaction classification failed for tree builder result:", str(e))
-
-        return tb_result, output
 
     try:
+        graph = uds2conn(tb_result['uds'], "graph")
         reactions = [v for v, d in graph.nodes(data=True) if d["type"] == "reaction"]
         reaction_classifier = get_wrapper_registry().get_wrapper(
             module="get_top_class_batch"
         )
         wrapper_input = GetTopClassBatchInput(smiles=reactions)
-        rxn_classes = reaction_classifier.call_sync(wrapper_input).result
+        res = reaction_classifier.call_sync(wrapper_input)
+        rxn_classes, message = res.result, res.message
+        assert rxn_classes, message
     except Exception as e:
         traceback.print_tb(e.__traceback__)
         output["success"] = False
-        output["error"] = "Reaction classification prediction failed."
+        output["error"] = f"Reaction classification prediction failed." \
+                        f"{traceback.format_exc()}"
         print("Reaction classification failed for tree builder result:", str(e))
 
         return tb_result, output
 
     try:
-        # Update reaction nodes in full network
         for i, rxn in enumerate(reactions):
             rxn_data = graph.nodes[rxn]
             rxn_data["class_num"], rxn_data["class_name"] = rxn_classes[i]
-        # Update reaction nodes in every tree
-        for tree in trees:
-            for v, d in tree.nodes(data=True):
-                if d["type"] == "reaction":
-                    rxn_data = graph.nodes[d["smiles"]]
-                    d["class_num"], d["class_name"] = (
-                        rxn_data["class_num"],
-                        rxn_data["class_name"],
-                    )
-        # Save updated result to database
-        tb_result["graph"] = nx.node_link_data(graph)
-        tb_result["paths"] = nx_paths_to_json(trees, NIL_UUID, json_format=json_format)
+        
+        graph_json = nx.node_link_data(graph)
+        graph_nodes = graph_json["nodes"] # graph connectivitiy id is smiles not uuid
+        graph_connectivity = graph_json["links"] # graph connectivitiy id is smiles not uuid
+
+        node_dict = defaultdict(dict)
+        for node in graph_nodes:
+            smiles = node["smiles"]
+            if node_dict[smiles] and node_dict[smiles] != node:
+                raise ValueError("Same smiles have different info.")
+            node_dict[smiles] = node
+
+        tb_result["uds"]["node_dict"] = node_dict
+        tb_result["uds"]["graph_connectivity"] = graph_connectivity
     except Exception as e:
         traceback.print_tb(e.__traceback__)
         output["success"] = False
-        output["error"] = "Reaction classification result processing failed."
+        output["error"] = f"Reaction classification result processing failed." \
+                        f"{traceback.format_exc()}"
         print("Reaction classification failed for tree builder result:", str(e))
-
         return tb_result, output
 
     return tb_result, output

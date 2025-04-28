@@ -9,7 +9,7 @@ from typing import Annotated, Any, Literal
 from utils import register_util
 from utils.oauth2 import oauth2_scheme
 from utils.registry import get_util_registry
-from utils.tree_search_results_util import standardize_result
+from utils.tree_search_results_util import standardize_result_ipp, standardize_result_tb
 
 # TODO: fix the time zone issue
 
@@ -38,6 +38,14 @@ class TreeSearchSavedResults(BaseModel):
     public: bool = False
     shared_with: list[str] = Field(default_factory=list)
 
+class UDS(BaseModel):
+    node_dict: dict
+    uuid2smiles: dict
+    graph: dict
+    pathways: list[dict]
+
+class Metadata(BaseModel):
+    uds: UDS
 
 @register_util(name="tree_search_results_controller")
 class TreeSearchResultsController:
@@ -48,6 +56,7 @@ class TreeSearchResultsController:
     methods_to_bind: dict[str, list[str]] = {
         "list": ["GET"],
         "retrieve": ["GET"],
+        "retrieve_pathway_metadata": ["POST"],
         "create": ["POST"],
         "update": ["PUT"],
         "destroy": ["DELETE"],
@@ -110,6 +119,21 @@ class TreeSearchResultsController:
 
         return results
 
+    def retrieve_pathway_metadata(self, result: dict, pathways_properties_only=True):
+        try:
+            Metadata(**result)
+        except Exception as e:
+            raise HTTPException(
+                status_code=404,
+                detail=f"{e}"
+            )
+        result = standardize_result_tb(result)
+        if pathways_properties_only:
+            return result["uds"]["pathways_properties"]
+        else:
+            return result
+
+
     def retrieve(self, result_id: str, token: Annotated[str, Depends(oauth2_scheme)]
                  ) -> TreeSearchSavedResults:
         """
@@ -140,8 +164,26 @@ class TreeSearchResultsController:
         if result["result_state"] in ["completed", "ipp"]:
             result["_id"] = str(result["_id"])
 
-            if result["result_type"] == "tree_builder":
-                result["result"] = standardize_result(result["result"])
+            if result["result_type"] == "ipp":
+                try:
+                    result["result"] = standardize_result_ipp(result["result"])
+                except:
+                    # return results without formatting - frontend 
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Unable to standardize ipp result for id: {result_id}!"
+                    )
+                # by pass tb result check
+                return result
+
+            elif result["result_type"] == "tree_builder":
+                try:
+                    result["result"] = standardize_result_tb(result["result"])
+                except:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Unable to standardize tb result for id: {result_id}!"
+                    )
 
             result = TreeSearchSavedResults(**result)
 
