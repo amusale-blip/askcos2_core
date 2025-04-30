@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from rdkit import Chem
+from rdkit.Chem.Descriptors import ExactMolWt
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseWrapper
@@ -33,12 +35,14 @@ class FastSolvOutput(BaseModel):
     results: list[FastSolvResult]
 
 
-class ConvertedSolubilityResult:
+class ConvertedSolubilityResult(BaseModel):
     Solvent: str
     Solute: str
     Temp: float
-    log_st_1: str
+    st_1: float
+    log_st_1: float
     uncertainty: float
+
 
 class FastSolvResponse(BaseModel):
     # result: list[FastSolvResult]
@@ -83,6 +87,9 @@ class FastSolvWrapper(BaseWrapper):
                 Solvent=r.solvent_smiles,
                 Solute=r.solute_smiles,
                 Temp=r.temperature,
+                st_1=ExactMolWt(
+                    Chem.MolFromSmiles(r.solute_smiles)
+                ) * 10.0 ** r.predicted_logS,
                 log_st_1=r.predicted_logS,
                 uncertainty=r.predicted_logS_stdev
             )
@@ -103,10 +110,11 @@ class FastSolvWrapper(BaseWrapper):
                       f"with the following error message {output.error}"
             result = None
 
-        response = FastSolvResponse(
-            status_code=status_code,
-            message=message,
-            result=result
-        )
+        # response = FastSolvResponse(
+        #     status_code=status_code,
+        #     message=message,
+        #     result=result
+        # )
+        response = FastSolvResponse(__root__=result)
 
         return response
