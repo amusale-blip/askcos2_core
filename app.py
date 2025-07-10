@@ -52,12 +52,17 @@ app = FastAPI(
         "tagsSorter": "alpha"
     }
 )
+
+allow_origins = os.environ.get("ALLOW_ORIGINS")
+allow_methods = os.environ.get("ALLOW_METHODS")
+allow_headers = os.environ.get("ALLOW_HEADERS")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins.split(",") if allow_origins else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=allow_methods.split(",") if allow_methods else ["*"],
+    allow_headers=allow_headers.split(",") if allow_headers else ["*"],
 )
 
 
