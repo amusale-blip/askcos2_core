@@ -48,6 +48,10 @@ class ExpandOneOptions(LowerCamelAliasModel):
         default=None,
         description="backend for retro rerank"
     )
+    atom_map_backend: Literal["indigo", "rxnmapper", "wln"] = Field(
+        default="rxnmapper",
+        description="backend for atom map"
+    )
     cluster_precursors: bool = Field(
         default=False,
         description="whether to cluster proposed precursors"
