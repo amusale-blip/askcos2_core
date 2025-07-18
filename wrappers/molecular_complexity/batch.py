@@ -5,11 +5,11 @@ from wrappers import register_wrapper
 from wrappers.base import BaseWrapper, BaseResponse
 
 
-class MolecularComplexityInput(LowerCamelAliasModel):
+class MolecularComplexityBatchInput(LowerCamelAliasModel):
 
-    smiles: str = Field(
-        description="SMILES string of the molecule",
-        example="O=C(O)c1ccccc1"
+    smiles_list: list[str] = Field(
+        description="List of SMILES strings of the molecules",
+        example=["O=C(O)c1ccccc1", "Brc1ccccc1"]
     )
 
     complexity_metrics: list[str] = Field(
@@ -17,28 +17,28 @@ class MolecularComplexityInput(LowerCamelAliasModel):
         example=["balan", "bertz"]
     )
 
-class MolecularComplexityOutput(BaseModel):
+class MolecularComplexityBatchOutput(BaseModel):
 
     error: str
     status: str
-    results: dict
+    results: list[dict]
 
-class MolecularComplexityResponse(BaseResponse):
-    result: dict | None
+class MolecularComplexityBatchResponse(BaseResponse):
+    result: list[dict] | None
 
 
 @register_wrapper(
-    name="molecular_complexity",
-    input_class=MolecularComplexityInput,
-    output_class=MolecularComplexityOutput,
-    response_class=MolecularComplexityResponse
+    name="molecular_complexity_batch",
+    input_class=MolecularComplexityBatchInput,
+    output_class=MolecularComplexityBatchOutput,
+    response_class=MolecularComplexityBatchResponse
 )
-class MolecularComplexityWrapper(BaseWrapper):
+class MolecularComplexityBatchWrapper(BaseWrapper):
     """Wrapper class for Molecular Complexity service"""
-    prefixes = ["molecular_complexity"]
+    prefixes = ["molecular_complexity/batch"]
 
-    def call_sync(self, input: MolecularComplexityInput
-                  ) -> MolecularComplexityResponse:
+    def call_sync(self, input: MolecularComplexityBatchInput
+                  ) -> MolecularComplexityBatchResponse:
         """
         Endpoint for synchronous call to the molecular complexity service.
         """
@@ -47,19 +47,19 @@ class MolecularComplexityWrapper(BaseWrapper):
 
         return response
 
-    async def call_async(self, input: MolecularComplexityInput, priority: int = 0
+    async def call_async(self, input: MolecularComplexityBatchInput, priority: int = 0
                          ) -> str:
         """
         Endpoint for asynchronous call to the molecular complexity service.
         """
         return await super().call_async(input=input, priority=priority)
 
-    async def retrieve(self, task_id: str) -> MolecularComplexityResponse | None:
+    async def retrieve(self, task_id: str) -> MolecularComplexityBatchResponse | None:
         return await super().retrieve(task_id=task_id)
 
     @staticmethod
-    def convert_output_to_response(output: MolecularComplexityOutput
-                                   ) -> MolecularComplexityResponse:
+    def convert_output_to_response(output: MolecularComplexityBatchOutput
+                                   ) -> MolecularComplexityBatchResponse:
         if output.status == "SUCCESS":
             status_code = 200
             message = ""
@@ -70,7 +70,7 @@ class MolecularComplexityWrapper(BaseWrapper):
                       f"with the following error message {output.error}"
             result = None
 
-        response = MolecularComplexityResponse(
+        response = MolecularComplexityBatchResponse(
             status_code=status_code,
             message=message,
             result=result
