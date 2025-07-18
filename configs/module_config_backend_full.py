@@ -298,7 +298,11 @@ module_config = {
             "custom_prediction_url": "",
             "timeout": 30,
             "available_model_names": []
-        }
+        },
+        "wrapper_names": [
+            "molecular_complexity",
+            "molecular_complexity_batch"
+        ]
     },
 
     "pathway_ranker": {
