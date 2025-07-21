@@ -24,6 +24,7 @@ module_config = {
         "retro_exact_match": True,
         "retro_graph2smiles": True,
         "retro_retrosim": True,
+        "retro_template_enumeration": True,
         "retro_template_relevance": True,
         "scscore": True,
         "site_selectivity": False,
@@ -433,6 +434,24 @@ module_config = {
             "available_model_names": [
                 "USPTO_FULL",
                 "bkms"
+            ]
+        }
+    },
+
+    "retro_template_enumeration": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/retro/template_enumeration.git",
+        "description":
+            "One-step retrosynthesis model with exhaustive template enumeration",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_gpu": False,
+            "ports_to_expose": [9461],
+            "default_prediction_url": "http://0.0.0.0:9461/predictions",
+            "custom_prediction_url": "",
+            "timeout": 10,
+            "available_model_names": [
+                "retrobiocat",
+                "USPTO_50k"
             ]
         }
     },

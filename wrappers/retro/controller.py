@@ -8,8 +8,12 @@ from wrappers.base import BaseResponse, BaseWrapper
 from wrappers.retro.augmented_transformer import RetroATInput, RetroATResponse
 from wrappers.retro.exact_match import RetroExactMatchInput, RetroExactMatchResponse
 from wrappers.retro.graph2smiles import RetroG2SInput, RetroG2SResponse
-from wrappers.retro.template_relevance import RetroTemplRelInput, RetroTemplRelResponse
 from wrappers.retro.retrosim import RetroRSimInput, RetroRSimResponse
+from wrappers.retro.template_enumeration import (
+    RetroTemplEnumInput,
+    RetroTemplEnumResponse
+)
+from wrappers.retro.template_relevance import RetroTemplRelInput, RetroTemplRelResponse
 from wrappers.registry import get_wrapper_registry
 
 
@@ -24,8 +28,9 @@ class RetroInput(LowerCamelAliasModel):
         "augmented_transformer",
         "exact_match",
         "graph2smiles",
-        "template_relevance",
-        "retrosim"
+        "retrosim",
+        "template_enumeration",
+        "template_relevance"
     ] = Field(
         default="template_relevance",
         description="backend for one-step retrosynthesis"
@@ -97,8 +102,9 @@ class RetroController(BaseWrapper):
         "augmented_transformer": "retro_augmented_transformer",
         "exact_match": "retro_exact_match",
         "graph2smiles": "retro_graph2smiles",
-        "template_relevance": "retro_template_relevance",
-        "retrosim": "retro_retrosim"
+        "retrosim": "retro_retrosim",
+        "template_enumeration": "retro_template_enumeration",
+        "template_relevance": "retro_template_relevance"
     }
 
     def __init__(self):
@@ -160,8 +166,9 @@ class RetroController(BaseWrapper):
         RetroATInput |
         RetroExactMatchInput |
         RetroG2SInput |
-        RetroTemplRelInput |
-        RetroRSimInput
+        RetroRSimInput |
+        RetroTemplEnumInput |
+        RetroTemplRelInput
     ):
         if backend == "augmented_transformer":
             wrapper_input = RetroATInput(
@@ -178,6 +185,18 @@ class RetroController(BaseWrapper):
                 model_name=input.model_name,
                 smiles=input.smiles
             )
+        elif backend == "retrosim":
+            wrapper_input = RetroRSimInput(
+                smiles=input.smiles,
+                threshold=input.threshold,
+                top_k=input.top_k,
+                reaction_set=input.model_name
+            )
+        elif backend == "template_enumeration":
+            wrapper_input = RetroTemplEnumInput(
+                model_name=input.model_name,
+                smiles=input.smiles
+            )
         elif backend == "template_relevance":
             wrapper_input = RetroTemplRelInput(
                 model_name=input.model_name,
@@ -185,13 +204,6 @@ class RetroController(BaseWrapper):
                 max_num_templates=input.max_num_templates,
                 max_cum_prob=input.max_cum_prob,
                 attribute_filter=input.attribute_filter
-            )
-        elif backend == "retrosim":
-            wrapper_input = RetroRSimInput(
-                smiles=input.smiles,
-                threshold=input.threshold,
-                top_k=input.top_k,
-                reaction_set=input.model_name
             )
         else:
             raise ValueError(f"Unsupported retro backend: {backend}!")
@@ -204,8 +216,9 @@ class RetroController(BaseWrapper):
             RetroATResponse |
             RetroExactMatchResponse |
             RetroG2SResponse |
-            RetroTemplRelResponse |
-            RetroRSimResponse,
+            RetroRSimResponse |
+            RetroTemplEnumResponse |
+            RetroTemplRelResponse,
         backend: str
     ) -> RetroResponse:
         status_code = wrapper_response.status_code
@@ -229,6 +242,29 @@ class RetroController(BaseWrapper):
                         result_per_smi.reactants,
                         result_per_smi.scores,
                         normalized_scores
+                    )]
+                )
+        elif backend == "template_enumeration":
+            # list[dict] -> list[list[dict]]
+            result = []
+            for result_per_smi in wrapper_response.result:
+                # denominator = sum(result_per_smi.scores)  # we can re-normalize here?
+                if not result_per_smi.scores:
+                    result.append([])
+                    continue
+
+                normalized_scores = softmax(result_per_smi.scores)
+                result.append(
+                    [{
+                        "outcome": outcome,
+                        "model_score": score,
+                        "normalized_model_score": float(normalized_score),
+                        "template": template
+                    } for outcome, score, normalized_score, template in zip(
+                        result_per_smi.reactants,
+                        result_per_smi.scores,
+                        normalized_scores,
+                        result_per_smi.templates
                     )]
                 )
         elif backend == "template_relevance":
