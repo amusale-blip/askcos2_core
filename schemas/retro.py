@@ -10,6 +10,7 @@ class RetroBackendOption(LowerCamelAliasModel):
         "augmented_transformer",
         "exact_match",
         "graph2smiles",
+        "template_enumeration",
         "template_relevance",
         "retrosim"
     ] = Field(
