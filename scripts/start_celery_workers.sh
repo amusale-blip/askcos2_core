@@ -2,7 +2,6 @@ IFS=","
 
 for args in \
   2,context_recommender_worker \
-  1,evaluate_reactions_worker \
   2,forward_worker \
   1,general_selectivity_worker \
   1,impurity_predictor_worker \
