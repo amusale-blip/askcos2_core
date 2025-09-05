@@ -115,14 +115,12 @@ for wrapper in wrapper_registry:
                 and "context_recommender" not in prefix
                 and "count_analogs" not in prefix
                 and not "descriptors" == prefix
-                and "evaluate_context" not in prefix
                 and "fast_filter/with_threshold" not in prefix
                 and "general_selectivity/gnn" not in prefix
                 and "general_selectivity/qm_gnn" not in prefix
                 and "general_selectivity/qm_gnn_no_reagent" not in prefix
                 and "get_top_class_batch" not in prefix
                 and "pmi_calculator" not in prefix
-                and "tree_optimizer" not in prefix
             )
             method_name_with_hyphen = method_name.replace("_", "-")
             router.add_api_route(

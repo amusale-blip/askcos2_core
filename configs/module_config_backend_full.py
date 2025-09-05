@@ -7,7 +7,6 @@ module_config = {
         "context_recommender": True,
         "count_analogs": True,
         "descriptors": True,
-        "evaluate_reactions": True,
         "fast_filter": True,
         "fastsolv": True,
         "forward_augmented_transformer": True,
@@ -147,24 +146,6 @@ module_config = {
             "timeout": 10,
             "available_model_names": []
         }
-    },
-
-    "evaluate_reactions": {
-        "repo": "git@gitlab.com:mlpds_mit/askcosv2/evaluate_reactions.git",
-        "description": "Reaction evaluator for reactions with different contexts",
-        "deployment": {
-            "deployment_config": "deployment.yaml",
-            "use_gpu": False,
-            "ports_to_expose": [9721],
-            "default_prediction_url": "http://0.0.0.0:9721",
-            "custom_prediction_url": "",
-            "timeout": 10,
-            "available_model_names": []
-        },
-        "wrapper_names": [
-            "evaluate_context",
-            "evaluate_reaction"
-        ]
     },
 
     "fast_filter": {
