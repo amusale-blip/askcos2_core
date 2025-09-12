@@ -5,6 +5,7 @@ module_config = {
         "atom_map_wln": True,
         "cluster": True,
         "context_recommender": True,
+        "context_quarc": True,
         "count_analogs": True,
         "descriptors": True,
         "fast_filter": True,
@@ -96,6 +97,25 @@ module_config = {
             "timeout": 30,
             "available_model_names": []
         }
+    },
+
+    "context_quarc": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/context_quarc.git",
+        "description":
+            "Quantitative context recommender",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_gpu": False,
+            "ports_to_expose": [9921],
+            "default_prediction_url": "http://0.0.0.0:9921/condition_prediction",
+            "custom_prediction_url": "",
+            "timeout": 10,
+            "available_model_names": []
+        },
+        "wrapper_names": [
+            "context_quarc",
+            "context_quarc_single_query"
+        ]
     },
 
     "context_recommender": {
