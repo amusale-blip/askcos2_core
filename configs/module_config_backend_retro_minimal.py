@@ -29,6 +29,7 @@ module_config = {
         "scscore": True,
         "site_selectivity": False,
         "solubility": False,
+        "solubility_fusion_cycle": False,
         "tree_search_expand_one": True,
         "tree_search_mcts": True,
         "tree_search_retro_star": True,
@@ -519,6 +520,22 @@ module_config = {
             "use_gpu": False,
             "ports_to_expose": [9732],
             "default_prediction_url": "http://0.0.0.0:9732/predictions/solprop",
+            "custom_prediction_url": "",
+            "timeout": 60,
+            "default_query_batch_size": 10,
+            "available_model_names": []
+        }
+    },
+
+    "solubility_fusion_cycle": {
+        "repo": "git@gitlab.com:mlpds_mit/askcosv2/solubility_fusion_cycle.git",
+        "description": "Solubility predictor with Fusion Cycle",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "image_policy": "pull",
+            "use_gpu": False,
+            "ports_to_expose": [9771],
+            "default_prediction_url": "http://0.0.0.0:9771/Fusion_Cycle",
             "custom_prediction_url": "",
             "timeout": 60,
             "default_query_batch_size": 10,
