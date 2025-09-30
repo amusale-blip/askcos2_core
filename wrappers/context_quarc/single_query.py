@@ -58,6 +58,9 @@ class ContextQuarcWrapper(BaseWrapper):
 
     @staticmethod
     def convert_input(input: ContextQuarcSingleInput) -> ContextQuarcInput:
+        if not input.reagents:
+            input.reagents = None
+
         if input.reagents is None:
             smiles = [f"{input.reactants}>>{input.products}"]
         else:
