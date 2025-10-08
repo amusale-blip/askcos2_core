@@ -47,6 +47,9 @@ class ConvertedSolubilityResult(BaseModel):
     Temp: float
     st_1: float
     log_st_1: float
+    MP_pred: float
+    MP_std: float
+    gamma: float
 
 
 class SolubilityFusionCycleResponse(BaseModel):
@@ -107,7 +110,10 @@ class SolubilityFusionCycleWrapper(BaseWrapper):
                 st_1=ExactMolWt(
                     Chem.MolFromSmiles(r.solute_smiles_canonical)
                 ) * 10.0 ** r.logS_calc,
-                log_st_1=r.logS_calc
+                log_st_1=r.logS_calc,
+                MP_pred=r.MP_pred,
+                MP_std=r.MP_std,
+                gamma=r.gamma
             )
             converted_results.append(converted_result)
 
