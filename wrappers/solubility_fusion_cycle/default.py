@@ -10,7 +10,7 @@ class SolubilityFusionCycleInput(LowerCamelAliasModel):
     solvent_smiles: list[str]
     solute_smiles: list[str]
     temperature: list[float]
-    density: list[float] | None = None
+    density: list | None = None
 
     class Config:
         schema_extra = {
