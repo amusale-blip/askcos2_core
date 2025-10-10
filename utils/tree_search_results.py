@@ -170,7 +170,7 @@ class TreeSearchResultsController:
                 except:
                     # return results without formatting - frontend 
                     raise HTTPException(
-                        status_code=409,
+                        status_code=500,
                         detail=f"Unable to standardize ipp result for id: {result_id}!"
                     )
                 # by pass tb result check
@@ -181,7 +181,7 @@ class TreeSearchResultsController:
                     result["result"] = standardize_result_tb(result["result"])
                 except:
                     raise HTTPException(
-                        status_code=409,
+                        status_code=500,
                         detail=f"Unable to standardize tb result for id: {result_id}!"
                     )
 
