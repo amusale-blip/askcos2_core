@@ -421,8 +421,8 @@ def standardize_result_ipp(result: dict) -> dict:
         smiles = node.get("id")
         if ">>" in smiles:
             node["modelMetadata"] = model_metadata_population(node)
-            node["PrecursorRank"] = node["rank"]
-            node["AvgModelScore"] = node["templateScore"]
+            node["PrecursorRank"] = node["precursorRank"]
+            node["AvgModelScore"] = node["averageModelScore"]
     
     return result
 
