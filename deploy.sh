@@ -552,6 +552,64 @@ mongorestore() {
   docker compose -f compose.yaml rm -sf mongo
 }
 
+mongodump-result-only() {
+  if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="$(pwd)/backup/$(date +%Y%m%d%s)"
+  fi
+  mkdir -p "${BACKUP_DIR}"
+  echo "Dumping mongo database contents (results only) to ${BACKUP_DIR}"
+  echo "This may take a few minutes..."
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongodump --host=${MONGO_HOST} --username=${MONGO_USER} --password=${MONGO_PW} --authenticationDatabase=admin --db=results --collection=results --archive=/data/mongo_dump_results.gz --gzip'
+  docker cp "${COMPOSE_PROJECT_NAME}"-mongo-1:/data/mongo_dump_results.gz "$BACKUP_DIR"
+  echo "Dumping complete."
+}
+
+mongodump-user-only() {
+  if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="$(pwd)/backup/$(date +%Y%m%d%s)"
+  fi
+  mkdir -p "${BACKUP_DIR}"
+  echo "Dumping mongo database contents (users only) to ${BACKUP_DIR}"
+  echo "This may take a few minutes..."
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongodump --host=${MONGO_HOST} --username=${MONGO_USER} --password=${MONGO_PW} --authenticationDatabase=admin --db=askcos --collection=users --archive=/data/mongo_dump_users.gz --gzip'
+  docker cp "${COMPOSE_PROJECT_NAME}"-mongo-1:/data/mongo_dump_users.gz "$BACKUP_DIR"
+  echo "Dumping complete."
+}
+
+mongorestore-result-only() {
+  if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="$(pwd)/backup/$(ls -t backup | head -1)"
+  fi
+  echo "Restoring data from ${BACKUP_DIR}"
+  echo "This may take a few minutes..."
+  echo "Starting the mongo container for seeding db"
+  docker compose -f compose.yaml up -d mongo
+  sleep 3
+  docker cp "$BACKUP_DIR"/mongo_dump_results.gz "${COMPOSE_PROJECT_NAME}"-mongo-1:/data/mongo_dump.gz
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongorestore --host=${MONGO_HOST} --username=${MONGO_USER} --password=${MONGO_PW} --authenticationDatabase=admin --gzip --archive=/data/mongo_dump.gz'
+  echo "Restore complete."
+  docker compose -f compose.yaml rm -sf mongo
+}
+
+mongorestore-user-only() {
+  if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="$(pwd)/backup/$(ls -t backup | head -1)"
+  fi
+  echo "Restoring data from ${BACKUP_DIR}"
+  echo "This may take a few minutes..."
+  echo "Starting the mongo container for seeding db"
+  docker compose -f compose.yaml up -d mongo
+  sleep 3
+  docker cp "$BACKUP_DIR"/mongo_dump_users.gz "${COMPOSE_PROJECT_NAME}"-mongo-1:/data/mongo_dump.gz
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongorestore --host=${MONGO_HOST} --username=${MONGO_USER} --password=${MONGO_PW} --authenticationDatabase=admin --gzip --archive=/data/mongo_dump.gz'
+  echo "Restore complete."
+  docker compose -f compose.yaml rm -sf mongo
+}
+
 post-update-message() {
   echo
   echo -e "\033[92m================================================================================\033[00m"
@@ -575,7 +633,8 @@ else
     case "$arg" in
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
       start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
-      backup | restore | mongodump | mongorestore | index-db | diff-env | post-update-message | old-messages | get-images | download-db-data)
+      backup | restore | mongodump | mongorestore | mongodump-result-only | mongodump-user-only | mongorestore-result-only | mongorestore-user-only | \
+      index-db | diff-env | post-update-message | old-messages | get-images | download-db-data)
         # This is a defined function, so execute it
         $arg
         ;;
