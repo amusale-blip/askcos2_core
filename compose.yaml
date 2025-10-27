@@ -85,8 +85,57 @@ services:
     depends_on:
       - rabbitmq
       - redis
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.3
+    hostname: keycloak
+    restart: always
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak123}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HOSTNAME_PORT: 8443
+      KC_HTTP_ENABLED: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "true"
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/askcos.ssl.cert
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/askcos.ssl.key
+      KC_HTTPS_PORT: 8443
+    ports:
+      - "8443:8443"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    command: start-dev --https-certificate-file=/opt/keycloak/certs/askcos.ssl.cert --https-certificate-key-file=/opt/keycloak/certs/askcos.ssl.key
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./askcos.ssl.cert:/opt/keycloak/certs/askcos.ssl.cert:ro
+      - ./askcos.ssl.key:/opt/keycloak/certs/askcos.ssl.key:ro
+
+  keycloak-db:
+    image: postgres:15-alpine
+    hostname: keycloak-db
+    restart: always
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak123}
+    ports:
+      - "5433:5432"
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   askcosv2_redisdata:
   askcosv2_mongo_data:
   askcosv2_precompute:
+  keycloak_data:
+  keycloak_db_data:
