@@ -1,4 +1,6 @@
 import os
+from idlelib import tooltip
+
 import uvicorn
 from adapters.registry import get_adapter_registry
 from fastapi import APIRouter as FastAPIRouter
@@ -7,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from tooltips import TOOLTIPS
 from typing import Any, Callable
 from utils import oauth2
 from utils.registry import get_util_registry
@@ -187,6 +190,22 @@ for util in util_registry:
                 tags=[tag]
             )
         app.include_router(router)
+
+tooltip_router = APIRouter(prefix="/api/tooltip")
+
+for tooltip_category, content in TOOLTIPS.items():
+    tooltip_category_with_hyphen = tooltip_category.replace("_", "-")
+    for tooltip_name, tooltip_data in content.items():
+        tooltip_name_with_hyphen = tooltip_name.replace("_", "-")
+        path = f"/{tooltip_category_with_hyphen}/{tooltip_name_with_hyphen}"
+        tooltip_router.add_api_route(
+            path=path,
+            endpoint=lambda: tooltip_data,
+            methods=["GET"],
+            tags=["tooltip", tooltip_category_with_hyphen]
+        )
+app.include_router(tooltip_router)
+
 
 if __name__ == "__main__":
     uvicorn.run(
