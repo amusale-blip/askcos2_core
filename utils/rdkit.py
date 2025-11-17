@@ -11,7 +11,17 @@ from utils import register_util
 from utils.draw_impl import align_molecule
 from utils.registry import get_util_registry
 from io import StringIO
+from utils.descriptors_util import (
+    rms_molecular_weight, 
+    molecular_weight,
+    number_of_heavy_atoms, 
+    number_of_rings, 
+    element_counts, 
+    get_core_fragment
+)
 
+# Re-export molecular_weight for external imports
+__all__ = ['molecular_weight', 'RDKitUtil']
 
 class SmilesInput(BaseModel):
     smiles: str
@@ -29,31 +39,6 @@ class RDKitAsyncReturn(BaseModel):
     task_id: str
 
 
-def molecular_weight(smiles: str) -> float:
-    """
-    Calculate exact molecular weight for the given SMILES string
-
-    Args:
-        smiles: SMILES string for which to calculate molecular weight
-
-    Returns:
-         float: exact molecular weight
-    """
-    try:
-        mol = Chem.MolFromSmiles(smiles)
-        molwt = Descriptors.ExactMolWt(mol)
-
-        return molwt
-    except Exception:
-        mol = Chem.MolFromSmiles(smiles, sanitize=False)
-        if mol is None:
-            return 9999.0
-        mol.UpdatePropertyCache(strict=False)
-        molwt = Descriptors.ExactMolWt(mol)
-
-        return molwt
-
-
 def _canonicalize(_smi: str, isomericSmiles: bool) -> str:
     if _smi:
         _mol = Chem.MolFromSmiles(_smi)
@@ -63,87 +48,6 @@ def _canonicalize(_smi: str, isomericSmiles: bool) -> str:
         if not _smi:
             raise ValueError("Cannot canonicalize smiles with rdkit.")
     return _smi
-
-def get_core_fragment(smiles):
-    """
-    Extract the core fragment from a molecule for identifying near cycles in IPP (Inverse Planning Problem).
-    
-    The core fragment is defined as the union of:
-        - All atoms that have atom mapping numbers (mapped atoms)
-        - All carbon atoms that are directly connected to mapped carbon atoms
-        - All ring atoms that are part of any ring containing the above atoms
-    
-    Non-core atoms are processed as follows:
-        - Atoms connected to core atoms are replaced with dummy atoms (atomic number 0)
-        - Completely disconnected atoms are removed from the molecule
-
-    
-    Args:
-        smiles (str): SMILES string of the molecule to extract core fragment from.
-
-    
-    Returns:
-        tuple: A tuple containing:
-            - str: SMILES string of the core fragment with dummy atoms for peripheral groups,
-                  or None if the input SMILES cannot be parsed
-            - str: Canonical SMILES of the original molecule with all atom mappings removed,
-                  or None if the input SMILES cannot be parsed
-    """
-
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is None:
-        return None, None
-
-    mol = Chem.RWMol(mol)
-
-    mapped = {atom.GetIdx() for atom in mol.GetAtoms() if atom.GetAtomMapNum() > 0}
-
-    
-    keep_atoms = set(mapped)
-    [x.SetAtomMapNum(0) for x in mol.GetAtoms()]
-    
-    canon_smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
-
-    # Add ring atoms that are in rings with any current kept atoms
-    ring_info = mol.GetRingInfo()
-    for ring in ring_info.AtomRings():
-        if any(idx in keep_atoms for idx in ring):
-            keep_atoms.update(ring)
-
-    # Determine which atoms to replace with dummies or delete
-    to_replace = set()
-    to_delete = set()
-    for atom in mol.GetAtoms():
-        idx = atom.GetIdx()
-        if idx in keep_atoms:
-            continue
-        neighbor_idxs = [nbr.GetIdx() for nbr in atom.GetNeighbors()]
-        if any(n in keep_atoms for n in neighbor_idxs):
-            to_replace.add(idx)
-        else:
-            to_delete.add(idx)
-
-    # Replace atoms with dummies
-    for idx in to_replace:
-        atom = mol.GetAtomWithIdx(idx)
-        atom.SetAtomicNum(0)
-        atom.SetIsAromatic(False)
-        atom.SetFormalCharge(0)
-        atom.SetNoImplicit(True)
-        atom.SetAtomMapNum(0)
-
-    # Remove unconnected atoms
-    for idx in sorted(to_delete, reverse=True):
-        mol.RemoveAtom(idx)
-
-    Chem.SanitizeMol(mol)
-
-    # return larger fragment only
-    frags = Chem.GetMolFrags(mol, asMols=True)
-    largest_frag = max(frags, key=lambda m: m.GetNumAtoms())
-
-    return Chem.MolToSmiles(largest_frag), canon_smiles
-
 
 @register_util(name="rdkit")
 class RDKitUtil:
@@ -157,6 +61,10 @@ class RDKitUtil:
         "to_sdfile": ["POST"],
         "apply_one_template": ["POST"],
         "apply_one_template_by_idx": ["POST"],
+        "get_rms_molecular_weight": ["POST"],
+        "get_num_heavy_atoms": ["POST"],
+        "get_num_rings": ["POST"],
+        "get_element_counts": ["POST"],
         "get_core_fragment": ["POST"],
     }
 
@@ -180,30 +88,6 @@ class RDKitUtil:
                 resp["smiles"] = _canonicalize(smiles, isomericSmiles)
         except ValueError:
             resp["error"] = f"Unable to canonicalize using RDKit, traceback: " \
-                            f"{tb.format_exc()}"
-            return Response(
-                content=json.dumps(resp),
-                status_code=500,
-                media_type="application/json"
-            )
-        else:
-            return Response(
-                content=json.dumps(resp),
-                status_code=200,
-                media_type="application/json"
-            )
-    
-    @staticmethod
-    def get_core_fragment(input: SmilesInput) -> Response:
-        smiles = input.smiles
-
-        resp = {}
-        try:
-            core_fragment, canon_smiles = get_core_fragment(smiles)
-            resp["core_fragment"] = core_fragment
-            resp["canon_smiles"] = canon_smiles
-        except Exception:
-            resp["error"] = f"Unable to get core fragment using RDKit, traceback: " \
                             f"{tb.format_exc()}"
             return Response(
                 content=json.dumps(resp),
@@ -245,7 +129,7 @@ class RDKitUtil:
             status_code=200,
             media_type="application/json"
         )
-
+  
     @staticmethod
     def from_molfile(input: MolfileInput):
         """
@@ -448,5 +332,122 @@ class RDKitUtil:
             media_type="application/json"
         )
         
+    @staticmethod
+    def get_rms_molecular_weight(input: SmilesInput) -> Response:
+        smiles = input.smiles
+
+        resp = {}
+        try:
+            rms_molwt = rms_molecular_weight(smiles)
+            resp["rms_molecular_weight"] = rms_molwt
+        except Exception:
+            resp["error"] = f"Unable to get RMS molecular weight using RDKit, traceback: " \
+                            f"{tb.format_exc()}"
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
+
+    @staticmethod
+    def get_num_heavy_atoms(input: SmilesInput) -> Response:
+        smiles = input.smiles
+
+        resp = {}
+        try:
+            num_heavy_atoms = number_of_heavy_atoms(smiles)
+            resp["num_heavy_atoms"] = num_heavy_atoms
+        except Exception:
+            resp["error"] = f"Unable to get number of heavy atoms using RDKit, traceback: " \
+                            f"{tb.format_exc()}"
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
+
+    @staticmethod
+    def get_num_rings(input: SmilesInput) -> Response:
+        smiles = input.smiles
+
+        resp = {}
+        try:
+            num_rings = number_of_rings(smiles)
+            resp["num_rings"] = num_rings
+        except Exception:
+            resp["error"] = f"Unable to get number of rings using RDKit, traceback: " \
+                            f"{tb.format_exc()}"
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
+
+    @staticmethod
+    def get_element_counts(input: SmilesInput) -> Response:
+        smiles = input.smiles
+
+        resp = {}
+        try:
+            _element_counts = element_counts(smiles)
+            resp["element_counts"] = _element_counts
+        except Exception:
+            resp["error"] = f"Unable to get element counts using RDKit, traceback: " \
+                            f"{tb.format_exc()}"
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
+    
+
+    @staticmethod
+    def get_core_fragment(input: SmilesInput) -> Response:
+        smiles = input.smiles
+
+        resp = {}
+        try:
+            core_fragment, canon_smiles = get_core_fragment(smiles)
+            resp["core_fragment"] = core_fragment
+            resp["canon_smiles"] = canon_smiles
+        except Exception:
+            resp["error"] = f"Unable to get core fragment using RDKit, traceback: " \
+                            f"{tb.format_exc()}"
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
+            
 
 
