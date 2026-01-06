@@ -53,7 +53,7 @@ class SiteSelectivityWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import site_selectivity_task
         async_result = site_selectivity_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

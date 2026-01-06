@@ -69,7 +69,7 @@ class RetroRSimWrapper(BaseWrapper):
     prefixes = ["retro/retrosim"]
 
     def call_raw(self, input: RetroRSimInput) -> RetroRSimOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
 
         response = self.session_sync.post(
             f"{self.prediction_url}",
@@ -98,7 +98,7 @@ class RetroRSimWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

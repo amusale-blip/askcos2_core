@@ -173,7 +173,7 @@ class TreeSearchController(BaseWrapper):
         input.result_id = str(uuid.uuid4())
         # Note that we can't use task_id as the result_id,
         # as it needs to be known beforehand
-        settings = input.dict()
+        settings = input.model_dump()
         settings = {k: v for k, v in settings.items() if "option" in k}
 
         saved_results = TreeSearchSavedResults(
@@ -197,7 +197,7 @@ class TreeSearchController(BaseWrapper):
 
         from askcos2_celery.tasks import tree_search_task
         async_result = tree_search_task.apply_async(
-            args=(self.name, input.dict(), token), priority=priority)
+            args=(self.name, input.model_dump(), token), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -209,7 +209,7 @@ class TreeSearchController(BaseWrapper):
     def convert_input(
         input: TreeSearchInput, backend: str
     ) -> TreeSearchMCTSInput | TreeSearchRetroStarInput:
-        wrapper_input = input.dict()
+        wrapper_input = input.model_dump()
         del wrapper_input["backend"]
 
         if backend == "mcts":

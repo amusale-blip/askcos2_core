@@ -34,7 +34,7 @@ class ContextRecommenderWrapper(BaseWrapper):
     def call_raw(self, input: ContextRecommenderInput) -> ContextRecommenderOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/api/v1/condition_uncleaned",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
@@ -52,7 +52,7 @@ class ContextRecommenderWrapper(BaseWrapper):
                          ) -> str:
         from askcos2_celery.tasks import context_recommender_task
         async_result = context_recommender_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

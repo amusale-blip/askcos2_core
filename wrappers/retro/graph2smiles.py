@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, RootModel, validator
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -37,8 +37,8 @@ class RetroG2SResult(BaseModel):
     scores: list[float]
 
 
-class RetroG2SOutput(BaseModel):
-    __root__: list[RetroG2SResult]
+class RetroG2SOutput(RootModel[list[RetroG2SResult]]):
+    pass
 
 
 class RetroG2SResponse(BaseResponse):
@@ -56,7 +56,7 @@ class RetroG2SWrapper(BaseWrapper):
     prefixes = ["retro/graph2smiles"]
 
     def call_raw(self, input: RetroG2SInput) -> RetroG2SOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
         model_name = input_as_dict["model_name"]
 
         response = self.session_sync.post(
@@ -65,7 +65,7 @@ class RetroG2SWrapper(BaseWrapper):
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
-        output = RetroG2SOutput(__root__=output)
+        output = RetroG2SOutput(output)
 
         return output
 
@@ -86,7 +86,7 @@ class RetroG2SWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -100,7 +100,7 @@ class RetroG2SWrapper(BaseWrapper):
         response = {
             "status_code": 200,
             "message": "",
-            "result": output.__root__
+            "result": output.root
         }
         response = RetroG2SResponse(**response)
 

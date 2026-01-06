@@ -87,7 +87,7 @@ class PathwayRankerWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import pathway_ranker_task
         async_result = pathway_ranker_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

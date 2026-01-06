@@ -79,7 +79,7 @@ class BaseWrapper:
     def call_raw(self, input: BaseModel) -> BaseModel:
         response = self.session_sync.post(
             self.prediction_url,
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
@@ -96,7 +96,7 @@ class BaseWrapper:
     async def call_async(self, input: BaseModel, priority: int = 0) -> str:
         from askcos2_celery.tasks import base_task
         async_result = base_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

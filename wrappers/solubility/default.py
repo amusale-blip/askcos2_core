@@ -1,4 +1,4 @@
-from pydantic import BaseModel, confloat, Field
+from pydantic import BaseModel, confloat, Field, RootModel
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseWrapper
@@ -147,8 +147,8 @@ class SolubilityResult(BaseModel):
     s_298: str | float | None = Field(alias="S298 [mg/mL]")
 
 
-class SolubilityResponse(BaseModel):
-    __root__: list[SolubilityResult]
+class SolubilityResponse(RootModel[list[SolubilityResult]]):
+    pass
 
 
 @register_wrapper(
@@ -196,11 +196,11 @@ class SolubilityWrapper(BaseWrapper):
             batch_input = SolubilityInput(task_list=batch_task_list)
             batch_output = self.call_raw(batch_input)
             batch_response = self.convert_output_to_response(batch_output)
-            batch_results = batch_response.__root__
+            batch_results = batch_response.root
 
             results.extend(batch_results)
 
-        response = SolubilityResponse(__root__=results)
+        response = SolubilityResponse(results)
 
         return response
 
@@ -216,9 +216,9 @@ class SolubilityWrapper(BaseWrapper):
     @staticmethod
     def convert_output_to_response(output: SolubilityOutput
                                    ) -> SolubilityResponse:
-        keys, value_lists = zip(*output.dict(by_alias=True).items())
+        keys, value_lists = zip(*output.model_dump(by_alias=True).items())
         results = [dict(zip(keys, values)) for values in zip(*value_lists)]
         results = postprocess_solubility_results(results)
-        response = SolubilityResponse(__root__=results)
+        response = SolubilityResponse(results)
 
         return response

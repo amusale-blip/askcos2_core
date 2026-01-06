@@ -115,7 +115,7 @@ class ImpurityPredictorWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import impurity_predictor_task
         async_result = impurity_predictor_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

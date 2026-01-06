@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 from rdkit import Chem
 from rdkit.Chem.Descriptors import ExactMolWt
 from schemas.base import LowerCamelAliasModel
@@ -44,9 +44,8 @@ class ConvertedSolubilityResult(BaseModel):
     uncertainty: float
 
 
-class FastSolvResponse(BaseModel):
-    # result: list[FastSolvResult]
-    __root__: list[ConvertedSolubilityResult]
+class FastSolvResponse(RootModel[list[ConvertedSolubilityResult]]):
+    pass
 
 
 @register_wrapper(
@@ -115,6 +114,6 @@ class FastSolvWrapper(BaseWrapper):
         #     message=message,
         #     result=result
         # )
-        response = FastSolvResponse(__root__=result)
+        response = FastSolvResponse(result)
 
         return response

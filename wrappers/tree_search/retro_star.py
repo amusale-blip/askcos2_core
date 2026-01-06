@@ -324,7 +324,7 @@ class RetroStarWrapper(BaseWrapper):
         banned_chemicals_controller = get_util_registry().get_util(
             module="banned_chemicals"
         )
-        user_banned_chemicals = banned_chemicals_controller.get(token=token).__root__
+        user_banned_chemicals = banned_chemicals_controller.get(token=token).root
         user_banned_chemicals = [entry.smiles for entry in user_banned_chemicals
                                  if entry.active]
         input.expand_one_options.banned_chemicals.extend(user_banned_chemicals)
@@ -335,7 +335,7 @@ class RetroStarWrapper(BaseWrapper):
         banned_reactions_controller = get_util_registry().get_util(
             module="banned_reactions"
         )
-        user_banned_reactions = banned_reactions_controller.get(token=token).__root__
+        user_banned_reactions = banned_reactions_controller.get(token=token).root
         user_banned_reactions = [entry.smiles for entry in user_banned_reactions
                                  if entry.active]
         input.expand_one_options.banned_reactions.extend(user_banned_reactions)
@@ -421,7 +421,7 @@ class RetroStarWrapper(BaseWrapper):
         input.result_id = str(uuid.uuid4())
         # Note that we can't use task_id as the result_id,
         # as it needs to be known beforehand
-        settings = input.dict()
+        settings = input.model_dump()
         settings = {k: v for k, v in settings.items() if "option" in k}
 
         saved_results = TreeSearchSavedResults(
@@ -445,7 +445,7 @@ class RetroStarWrapper(BaseWrapper):
 
         from askcos2_celery.tasks import tree_search_retro_star_task
         async_result = tree_search_retro_star_task.apply_async(
-            args=(self.name, input.dict(), token), priority=priority)
+            args=(self.name, input.model_dump(), token), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -456,7 +456,7 @@ class RetroStarWrapper(BaseWrapper):
     @staticmethod
     def process_input(input: RetroStarInput) -> dict:
         build_tree_options = input.build_tree_options
-        dict_input = input.dict()
+        dict_input = input.model_dump()
 
         termination_logic = {"and": [], "or": []}
 

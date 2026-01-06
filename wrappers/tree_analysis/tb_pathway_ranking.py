@@ -60,7 +60,7 @@ def _tb_pathway_ranking(
         )
         response = pathway_ranker.call_sync(wrapper_input)
         assert bool(response.result), response.message
-        results = response.result.dict()
+        results = response.result.model_dump()
     except Exception as e:
         traceback.format_exc()
         output["success"] = False

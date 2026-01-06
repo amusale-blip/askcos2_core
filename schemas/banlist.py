@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, constr, Field
+from pydantic import BaseModel, constr, Field, RootModel
 
 
 class BlacklistedEntry(BaseModel):
@@ -12,9 +12,9 @@ class BlacklistedEntry(BaseModel):
     active: bool = True
 
 
-class BlacklistedChemicals(BaseModel):
-    __root__: list[BlacklistedEntry]
+class BlacklistedChemicals(RootModel[list[BlacklistedEntry]]):
+    pass
 
 
-class BlacklistedReactions(BaseModel):
-    __root__: list[BlacklistedEntry]
+class BlacklistedReactions(RootModel[list[BlacklistedEntry]]):
+    pass

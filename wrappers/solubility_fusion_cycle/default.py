@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from rdkit import Chem
 from rdkit.Chem.Descriptors import ExactMolWt
 from schemas.base import LowerCamelAliasModel
@@ -52,8 +52,8 @@ class ConvertedSolubilityResult(BaseModel):
     gamma: float
 
 
-class SolubilityFusionCycleResponse(BaseModel):
-    __root__: list[ConvertedSolubilityResult] | None
+class SolubilityFusionCycleResponse(RootModel[list[ConvertedSolubilityResult] | None]):
+    pass
 
 
 @register_wrapper(
@@ -132,6 +132,6 @@ class SolubilityFusionCycleWrapper(BaseWrapper):
                       f"with the following error message {output.error}"
             result = None
 
-        response = SolubilityFusionCycleResponse(__root__=result)
+        response = SolubilityFusionCycleResponse(result)
 
         return response

@@ -51,7 +51,7 @@ class FastFilterWrapper(BaseWrapper):
     def call_raw(self, input: FastFilterInput) -> FastFilterOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/fast_filter_evaluate",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()

@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, RootModel, validator
 from schemas.base import LowerCamelAliasModel
 from typing import Any, Literal
 from wrappers import register_wrapper
@@ -58,8 +58,8 @@ class RetroTemplRelResult(BaseModel):
     scores: list[float]
 
 
-class RetroTemplRelOutput(BaseModel):
-    __root__: list[RetroTemplRelResult]
+class RetroTemplRelOutput(RootModel[list[RetroTemplRelResult]]):
+    pass
 
 
 class RetroTemplRelResponse(BaseResponse):
@@ -77,7 +77,7 @@ class RetroTemplRelWrapper(BaseWrapper):
     prefixes = ["retro/template_relevance"]
 
     def call_raw(self, input: RetroTemplRelInput) -> RetroTemplRelOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
         model_name = input_as_dict["model_name"]
 
         response = self.session_sync.post(
@@ -86,7 +86,7 @@ class RetroTemplRelWrapper(BaseWrapper):
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
-        output = RetroTemplRelOutput(__root__=output)
+        output = RetroTemplRelOutput(output)
 
         return output
 
@@ -109,7 +109,7 @@ class RetroTemplRelWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -123,7 +123,7 @@ class RetroTemplRelWrapper(BaseWrapper):
         response = {
             "status_code": 200,
             "message": "",
-            "result": output.__root__
+            "result": output.root
         }
         response = RetroTemplRelResponse(**response)
 

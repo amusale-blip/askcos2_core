@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, RootModel, validator
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -37,8 +37,8 @@ class RetroATResult(BaseModel):
     scores: list[float]
 
 
-class RetroATOutput(BaseModel):
-    __root__: list[RetroATResult]
+class RetroATOutput(RootModel[list[RetroATResult]]):
+    pass
 
 
 class RetroATResponse(BaseResponse):
@@ -56,7 +56,7 @@ class RetroATWrapper(BaseWrapper):
     prefixes = ["retro/augmented_transformer"]
 
     def call_raw(self, input: RetroATInput) -> RetroATOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
         model_name = input_as_dict["model_name"]
 
         response = self.session_sync.post(
@@ -65,7 +65,7 @@ class RetroATWrapper(BaseWrapper):
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
-        output = RetroATOutput(__root__=output)
+        output = RetroATOutput(output)
 
         return output
 
@@ -86,7 +86,7 @@ class RetroATWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -100,7 +100,7 @@ class RetroATWrapper(BaseWrapper):
         response = {
             "status_code": 200,
             "message": "",
-            "result": output.__root__
+            "result": output.root
         }
         response = RetroATResponse(**response)
 

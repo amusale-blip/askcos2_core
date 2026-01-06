@@ -61,7 +61,7 @@ class RetroExactMatchWrapper(BaseWrapper):
     prefixes = ["retro/exact_match"]
 
     def call_raw(self, input: RetroExactMatchInput) -> RetroExactMatchOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
 
         response = self.session_sync.post(
             f"{self.prediction_url}",
@@ -88,7 +88,7 @@ class RetroExactMatchWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

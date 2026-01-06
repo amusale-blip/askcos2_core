@@ -60,7 +60,7 @@ class ForwardWLDN5Wrapper(BaseWrapper):
         if isinstance(input.reactants, str):
             input.reactants = [input.reactants]
 
-        input_as_dict = copy.deepcopy(input.dict())
+        input_as_dict = copy.deepcopy(input.model_dump())
         results = []
         for i, reactants in enumerate(input.reactants):
             input_as_dict["reactants"] = reactants
@@ -95,7 +95,7 @@ class ForwardWLDN5Wrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import forward_task
         async_result = forward_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id
