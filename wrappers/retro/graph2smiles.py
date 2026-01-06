@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, RootModel, validator
+from pydantic import BaseModel, Field, RootModel, field_validator
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -16,8 +16,9 @@ class RetroG2SInput(LowerCamelAliasModel):
         example=["CS(=N)(=O)Cc1cccc(Br)c1", "CN(C)CCOC(c1ccccc1)c1ccccc1"]
     )
 
-    @validator("model_name")
-    def check_model_name(cls, v, values):
+    @field_validator("model_name")
+    @classmethod
+    def check_model_name(cls, v: str) -> str:
         default_path = "configs.module_config_full"
         config_path = os.environ.get(
             "MODULE_CONFIG_PATH", default_path

@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import Field, validator
+from pydantic import Field, field_validator, ValidationInfo
 from schemas.base import LowerCamelAliasModel
 from typing import Any, Literal
 
@@ -46,9 +46,10 @@ class RetroBackendOption(LowerCamelAliasModel):
                     "used for retrosim only"
     )
 
-    @validator("retro_model_name")
-    def check_retro_model_name(cls, v, values):
-        if "retro_backend" not in values:
+    @field_validator("retro_model_name")
+    @classmethod
+    def check_retro_model_name(cls, v: str, info: ValidationInfo) -> str:
+        if "retro_backend" not in info.data:
             raise ValueError("retro_backend not supplied!")
 
         default_path = "configs.module_config_full"
@@ -57,7 +58,7 @@ class RetroBackendOption(LowerCamelAliasModel):
         ).replace("/", ".").rstrip(".py")
         module_config = importlib.import_module(config_path).module_config
 
-        retro_backend = values["retro_backend"]
+        retro_backend = info.data["retro_backend"]
         available_model_names = module_config[
             f"retro_{retro_backend}"]["deployment"]["available_model_names"]
         if v not in available_model_names:

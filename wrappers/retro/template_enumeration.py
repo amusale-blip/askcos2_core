@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from schemas.base import LowerCamelAliasModel
 from typing import Any
 from wrappers import register_wrapper
@@ -17,8 +17,9 @@ class RetroTemplEnumInput(LowerCamelAliasModel):
         description="reaction set to be queried against",
     )
 
-    @validator("model_name")
-    def check_reaction_set(cls, v, values):
+    @field_validator("model_name")
+    @classmethod
+    def check_reaction_set(cls, v: str) -> str:
         default_path = "configs.module_config_full"
         config_path = os.environ.get(
             "MODULE_CONFIG_PATH", default_path

@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -16,8 +16,9 @@ class RetroExactMatchInput(LowerCamelAliasModel):
         description="reaction set to be queried against",
     )
 
-    @validator("reaction_set")
-    def check_reaction_set(cls, v, values):
+    @field_validator("reaction_set")
+    @classmethod
+    def check_reaction_set(cls, v: str) -> str:
         default_path = "configs.module_config_full"
         config_path = os.environ.get(
             "MODULE_CONFIG_PATH", default_path
