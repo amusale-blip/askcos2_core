@@ -85,11 +85,11 @@ class Drawer:
         # https://github.com/tiangolo/fastapi/issues/5719
         query_params.reacting_atoms = reacting_atoms
 
-        return draw(query_params.dict())
+        return draw(query_params.model_dump())
 
     @staticmethod
     def post(data: DrawerInput) -> Response:
-        return draw(data.dict())
+        return draw(data.model_dump())
 
 
 def draw(data: dict) -> Response:

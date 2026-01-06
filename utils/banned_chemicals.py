@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import Depends, Response
-from pydantic import BaseModel, constr, Field
+from pydantic import BaseModel, constr, Field, RootModel
 from typing import Annotated
 from utils import register_util
 from utils.base import BaseBanlistController
@@ -21,8 +21,8 @@ class BlacklistedChemical(BaseModel):
     active: bool = True
 
 
-class BlacklistedChemicals(BaseModel):
-    __root__: list[BlacklistedChemical]
+class BlacklistedChemicals(RootModel[list[BlacklistedChemical]]):
+    pass
 
 
 @register_util(name="banned_chemicals")
@@ -65,7 +65,7 @@ class BannedChemicalsController(BaseBanlistController):
             banned_chemical.id = str(r.get("_id"))
             banned_chemicals.append(banned_chemical)
 
-        banned_chemicals = BlacklistedChemicals(__root__=banned_chemicals)
+        banned_chemicals = BlacklistedChemicals(banned_chemicals)
 
         return banned_chemicals
 

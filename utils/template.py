@@ -129,7 +129,7 @@ class Template:
         cursor = self.collection.find(filter=query, projection=proj)
         result = {str(doc.pop("_id")): doc[field] if field else doc
                   for doc in cursor}
-        resp = {"result": result, "query": data.dict()}
+        resp = {"result": result, "query": data.model_dump()}
 
         return Response(
             content=json.dumps(resp),

@@ -52,7 +52,7 @@ class CacheController:
         input_hash = json.dumps(jsonable_encoder(input))
 
         collection = self.db[module_name]
-        _id = collection.insert_one(response.dict()).inserted_id
+        _id = collection.insert_one(response.model_dump()).inserted_id
         cache_map[input_hash] = _id
 
         while len(cache_map) >= self.cache_size:

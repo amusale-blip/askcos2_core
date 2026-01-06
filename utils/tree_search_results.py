@@ -217,7 +217,7 @@ class TreeSearchResultsController:
             if not result.result_id:
                 result.result_id = str(uuid.uuid4())
 
-        self.collection.insert_one(result.dict())
+        self.collection.insert_one(result.model_dump())
 
         resp = {
             "success": True,
@@ -527,7 +527,7 @@ class TreeSearchResultsController:
             "user": user.username,
             "result_id": result_id
         }
-        result_doc = result.dict()
+        result_doc = result.model_dump()
         if "result_id" not in result_doc or not result_doc["result_id"]:
             result_doc["result_id"] = result_id
 

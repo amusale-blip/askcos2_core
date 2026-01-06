@@ -185,7 +185,7 @@ class Buyables:
         }
 
         try:
-            result = pricer.add(doc.dict(), allow_overwrite=allowOverwrite)
+            result = pricer.add(doc.model_dump(), allow_overwrite=allowOverwrite)
         except NotImplementedError:
             resp["error"] = "Adding new items is not supported."
 
@@ -240,7 +240,7 @@ class Buyables:
 
         resp = {"error": None, "result": None}
         try:
-            result = pricer.update(pk, doc.dict())
+            result = pricer.update(pk, doc.model_dump())
         except NotImplementedError:
             resp["error"] = "Updating items by ID is not supported."
 
