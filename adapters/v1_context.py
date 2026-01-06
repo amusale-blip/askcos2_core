@@ -1,5 +1,5 @@
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from wrappers.registry import get_wrapper_registry
 from wrappers.context_recommender.default_uncleaned import (
     ContextRecommenderInput,
@@ -60,8 +60,8 @@ class V1ContextResult(BaseModel):
     score: float = None
 
 
-class V1ContextResults(BaseModel):
-    __root__: list[V1ContextResult]
+class V1ContextResults(RootModel[list[V1ContextResult]]):
+    pass
 
 
 @register_adapter(
@@ -89,7 +89,7 @@ class V1ContextAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1ContextAsyncReturn(
@@ -141,6 +141,6 @@ class V1ContextAdapter:
             for c, s in zip(res, scores):
                 c["score"] = s
 
-        result = V1ContextResults(__root__=res)
+        result = V1ContextResults(res)
 
         return result

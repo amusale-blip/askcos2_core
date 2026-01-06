@@ -1,6 +1,6 @@
 import json
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Optional, Literal
 from wrappers.registry import get_wrapper_registry
 from wrappers.pathway_ranker.default import (
@@ -37,8 +37,8 @@ class V1PathwayRankerAsyncReturn(BaseModel):
     task_id: str
 
 
-class V1PathwayRankerResult(BaseModel):
-    __root__: PathwayRankerResult
+class V1PathwayRankerResult(RootModel[PathwayRankerResult]):
+    pass
 
 
 @register_adapter(
@@ -64,7 +64,7 @@ class V1PathwayRankerAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1PathwayRankerAsyncReturn(
@@ -94,6 +94,6 @@ class V1PathwayRankerAdapter:
         print("wrapper_response is Here :::::::::::::::::::::::::::::::")
         print(wrapper_response)
         result = wrapper_response.result
-        result = V1PathwayRankerResult(__root__=result)
+        result = V1PathwayRankerResult(result)
 
         return result

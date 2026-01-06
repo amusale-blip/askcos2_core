@@ -1,5 +1,5 @@
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from wrappers.registry import get_wrapper_registry
 from wrappers.site_selectivity.default import (
     SiteSelectivityInput,
@@ -19,8 +19,8 @@ class V1SelectivityAsyncReturn(BaseModel):
     task_id: str
 
 
-class V1SelectivityResult(BaseModel):
-    __root__: list[SiteSelectivityResult]
+class V1SelectivityResult(RootModel[list[SiteSelectivityResult]]):
+    pass
 
 
 @register_adapter(
@@ -46,7 +46,7 @@ class V1SelectivityAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1SelectivityAsyncReturn(
@@ -64,6 +64,6 @@ class V1SelectivityAdapter:
     def convert_response(wrapper_response: SiteSelectivityResponse
                          ) -> V1SelectivityResult:
         result = wrapper_response.result[0]
-        result = V1SelectivityResult(__root__=result)
+        result = V1SelectivityResult(result)
 
         return result

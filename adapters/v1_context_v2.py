@@ -1,5 +1,5 @@
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Literal
 from wrappers.registry import get_wrapper_registry
 from wrappers.context_recommender.predict_graph import (
@@ -46,8 +46,8 @@ class V1ContextV2Result(BaseModel):
     reactants: dict[str, float]
 
 
-class V1ContextV2Results(BaseModel):
-    __root__: list[V1ContextV2Result]
+class V1ContextV2Results(RootModel[list[V1ContextV2Result]]):
+    pass
 
 
 @register_adapter(
@@ -78,7 +78,7 @@ class V1ContextV2Adapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1ContextV2AsyncReturn(
@@ -107,6 +107,6 @@ class V1ContextV2Adapter:
     @staticmethod
     def convert_response(wrapper_response: ContextRecommenderFPResponse |
                          ContextRecommenderGraphResponse) -> V1ContextV2Results:
-        result = V1ContextV2Results(__root__=wrapper_response.result)
+        result = V1ContextV2Results(wrapper_response.result)
 
         return result

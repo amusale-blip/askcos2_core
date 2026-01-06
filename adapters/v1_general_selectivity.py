@@ -1,5 +1,5 @@
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Literal
 from wrappers.registry import get_wrapper_registry
 from wrappers.general_selectivity.controller import (
@@ -55,8 +55,8 @@ class V1GeneralSelectivityAsyncReturn(BaseModel):
     task_id: str
 
 
-class V1GeneralSelectivityResult(BaseModel):
-    __root__: list[GeneralSelectivityResult]
+class V1GeneralSelectivityResult(RootModel[list[GeneralSelectivityResult]]):
+    pass
 
 
 @register_adapter(
@@ -82,7 +82,7 @@ class V1GeneralSelectivityAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1GeneralSelectivityAsyncReturn(
@@ -135,6 +135,6 @@ class V1GeneralSelectivityAdapter:
             raise ValueError(e)
 
         result = wrapper_response.result
-        result = V1GeneralSelectivityResult(__root__=result)
+        result = V1GeneralSelectivityResult(result)
 
         return result
