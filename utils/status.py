@@ -13,7 +13,7 @@ class CollectionData(BaseModel):
     description: str
     url: str
     total: int
-    details: dict[str, int | None]
+    details: dict[str, int | None] | None = None
     field: str
 
 
@@ -31,7 +31,7 @@ class StatusDatabase:
         "get": ["GET"]
     }
 
-    def __init__(self, util_config: dict[str, Any] = None):
+    def __init__(self, util_config: dict[str, Any] | None = None):
         self.client = MongoClient(serverSelectionTimeoutMS=1000, **db_config.MONGO)
         database = "askcos"
 
@@ -142,7 +142,7 @@ class StatusDatabase:
         "get": ["GET"]
     }
 
-    def __init__(self, util_config: dict[str, Any] = None):
+    def __init__(self, util_config: dict[str, Any] | None = None):
         pass
 
     def get(self) -> Response:

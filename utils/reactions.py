@@ -14,7 +14,7 @@ DEFAULT_MORGAN_LEN = 2048
 
 class ReactionsInput(LowerCamelAliasModel):
     ids: list[int | str]
-    template_set: str = None
+    template_set: str | None = None
 
 
 class ReactionsResponse(BaseModel):

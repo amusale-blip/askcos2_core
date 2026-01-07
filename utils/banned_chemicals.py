@@ -14,9 +14,9 @@ class BlacklistedChemical(BaseModel):
     """
     id: str = ""
     user: str
-    description: constr(max_length=1000) = None
+    description: constr(max_length=1000) | None = None
     created: datetime = Field(default_factory=datetime.now)
-    dt: constr(max_length=200) = None
+    dt: constr(max_length=200) | None = None
     smiles: constr(max_length=5000)
     active: bool = True
 
@@ -72,10 +72,10 @@ class BannedChemicalsController(BaseBanlistController):
     def post(
         self,
         description: str = "no description",
-        dt: str = None,
-        smiles: str = None,
+        dt: str | None = None,
+        smiles: str | None = None,
         active: bool = True,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         """
         API endpoint for adding banned reactions.

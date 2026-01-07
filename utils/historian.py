@@ -67,7 +67,7 @@ class Historian:
     def lookup_smiles(
         self,
         smiles: str,
-        template_sets: list[str] = None,
+        template_sets: list[str] | None = None,
         canonicalize=True,
         isomeric_smiles=True
     ) -> dict[str, int]:
@@ -104,7 +104,7 @@ class Historian:
     def lookup_smiles_list(
         self,
         smiles_list: list[str],
-        template_sets: list[str] = None,
+        template_sets: list[str] | None = None,
         canonicalize: bool = True,
         isomeric_smiles: bool = True
     ) -> dict[str, dict[str, int]]:
@@ -123,7 +123,7 @@ class Historian:
     def search(
         self,
         smiles: str,
-        template_sets: list[str] = None,
+        template_sets: list[str] | None = None,
         canonicalize: bool = True,
         isomeric_smiles: bool = True
     ) -> list:
@@ -219,7 +219,7 @@ class MongoHistorian:
         self,
         smiles: str,
         hashed_smiles: str,
-        template_sets: list[str] = None
+        template_sets: list[str] | None = None
     ) -> dict[str, int]:
         # Processing for template subsets which use the same historian data
         default_result = {"as_reactant": 0, "as_product": 0}
@@ -279,7 +279,7 @@ class FileHistorian:
         self,
         smiles: str,
         hashed_smiles: str,
-        template_sets: list[str] = None
+        template_sets: list[str] | None = None
     ) -> dict[str, int]:
         default_result = {"as_reactant": 0, "as_product": 0}
 

@@ -61,10 +61,10 @@ class BaseBanlistController:
     def post(
         self,
         description: str = "no description",
-        dt: str = None,
-        smiles: str = None,
+        dt: str | None = None,
+        smiles: str | None = None,
         active: bool = True,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ):
         """
         API endpoint for adding banned entries.

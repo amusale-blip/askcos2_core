@@ -24,7 +24,7 @@ class APILogging:
         "purge": ["DELETE"]
     }
 
-    def __init__(self, util_config: dict[str, Any] = None):
+    def __init__(self, util_config: dict[str, Any] | None = None):
         self.client = MongoClient(serverSelectionTimeoutMS=1000, **db_config.MONGO)
         database = "logs"
         collection = "api_calls"

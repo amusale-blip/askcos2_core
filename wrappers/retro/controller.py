@@ -79,10 +79,10 @@ class RetroResult(BaseModel):
     outcome: str
     model_score: float
     normalized_model_score: float
-    template: dict[str, Any] | None
-    reaction_id: str | None
-    reaction_set: str | None
-    reaction_data: dict[str, Any] | None
+    template: dict[str, Any] | None = None
+    reaction_id: str | None = None
+    reaction_set: str | None = None
+    reaction_data: dict[str, Any] | None = None
 
 
 class RetroResponse(BaseResponse):

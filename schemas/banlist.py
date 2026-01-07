@@ -5,9 +5,9 @@ from pydantic import BaseModel, constr, Field, RootModel
 class BlacklistedEntry(BaseModel):
     id: str = ""
     user: str
-    description: constr(max_length=1000) = None
+    description: constr(max_length=1000) | None = None
     created: datetime = Field(default_factory=datetime.now)
-    dt: constr(max_length=200) = None
+    dt: constr(max_length=200) | None = None
     smiles: constr(max_length=5000)
     active: bool = True
 

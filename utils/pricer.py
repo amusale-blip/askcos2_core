@@ -148,7 +148,7 @@ class Pricer:
         self,
         search_str: str,
         source: list[str] | str | None = None,
-        properties: list[dict[str, Any]] = None,
+        properties: list[dict[str, Any]] | None = None,
         regex: bool = False,
         sim_threshold: float = 1.0,
         limit: int = 100,

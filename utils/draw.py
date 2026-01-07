@@ -14,19 +14,19 @@ from utils.image_annotation import generate_annotated_image
 
 class DrawerInput(LowerCamelAliasModel):
     smiles: str
-    input_type: Literal["", "chemical", "reaction", "template"] = None
+    input_type: Literal["", "chemical", "reaction", "template"] | None = None
     svg: bool = True
     transparent: bool = False
     draw_map: bool = False
     highlight: bool = False
-    reacting_atoms: list[float] = None
-    reference: str = None
+    reacting_atoms: list[float] | None = None
+    reference: str | None = None
     align: bool = False
     annotate: bool = False
     ppg: float = 0.0
     as_reactant: int = 0
     as_product: int = 0
-    size: float = None
+    size: float | None = None
 
 
 @register_util(name="draw")

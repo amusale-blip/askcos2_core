@@ -223,8 +223,8 @@ class UserController:
         self,
         username: str,
         password: str,
-        email: str = None,
-        full_name: str = None,
+        email: str | None = None,
+        full_name: str | None = None,
         disabled: bool = False
     ) -> Response:
         if not username.replace('_', '').isalnum():
@@ -278,10 +278,10 @@ class UserController:
     def update(
         self,
         username: str,
-        email: str = None,
-        full_name: str = None,
+        email: str | None = None,
+        full_name: str | None = None,
         disabled: bool = False,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         user = self.get_current_user(token)
         if user.username == username or user.is_superuser:
@@ -330,7 +330,7 @@ class UserController:
         self,
         username: str,
         password: str,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         user = self.get_current_user(token)
         if user.username == username or user.is_superuser:
@@ -353,7 +353,7 @@ class UserController:
     def promote(
         self,
         username: str,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         user = self.get_current_user(token)
         if user.is_superuser:
@@ -375,7 +375,7 @@ class UserController:
     def demote(
         self,
         username: str,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         user = self.get_current_user(token)
         if user.is_superuser:

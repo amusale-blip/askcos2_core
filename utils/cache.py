@@ -14,7 +14,7 @@ class CacheController:
     prefixes = []
     methods_to_bind: dict[str, list[str]] = {}
 
-    def __init__(self, util_config: dict[str, Any] = None):
+    def __init__(self, util_config: dict[str, Any] | None = None):
         self.cache_maps = {}
         self.cache_size = 10000
 
