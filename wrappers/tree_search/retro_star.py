@@ -75,7 +75,10 @@ class ExpandOneOptions(LowerCamelAliasModel):
                     "by reverse application of the forward template"
     )
 
-    model_config = ConfigDict(allow_population_by_field_name=True)
+    model_config = ConfigDict(
+        validate_by_name=True,
+        validate_by_alias=True
+    )
 
 
 def _hide_optional_fields(schema: dict[str, Any], model: Any) -> None:
