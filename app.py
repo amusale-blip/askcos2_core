@@ -1,13 +1,13 @@
 import os
-from idlelib import tooltip
-
 import uvicorn
 from adapters.registry import get_adapter_registry
+from configs.mcp_config import INCLUDE_OPERATIONS, OPERATION_IDS
 from fastapi import APIRouter as FastAPIRouter
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi_mcp import FastApiMCP
 from fastapi.middleware.cors import CORSMiddleware
 from tooltips import TOOLTIPS
 from typing import Any, Callable
@@ -126,13 +126,15 @@ for wrapper in wrapper_registry:
                 and "pmi_calculator" not in prefix
             )
             method_name_with_hyphen = method_name.replace("_", "-")
+            full_api_path = f"/api/{prefix_with_hyphen}/{method_name_with_hyphen}"
             router.add_api_route(
                 path=f"/{method_name_with_hyphen}",
                 endpoint=getattr(wrapper, method_name),
                 methods=bind_types,
                 include_in_schema=include_in_schema,
                 response_model_by_alias="retro" not in prefix,
-                tags=[prefix_with_hyphen.split("/")[0]]
+                tags=[prefix_with_hyphen.split("/")[0]],
+                operation_id=OPERATION_IDS.get(full_api_path)
             )
         app.include_router(router)
 
@@ -183,11 +185,14 @@ for util in util_registry:
                 tag = "admin"
             else:
                 tag = f"utils/{tag}"
+
+            full_api_path = f"/api/{prefix_with_hyphen}{path}"
             router.add_api_route(
                 path=path,
                 endpoint=getattr(util, method_name),
                 methods=bind_types,
-                tags=[tag]
+                tags=[tag],
+                operation_id=OPERATION_IDS.get(full_api_path)
             )
         app.include_router(router)
 
@@ -198,13 +203,22 @@ for tooltip_category, content in TOOLTIPS.items():
     for tooltip_name, tooltip_data in content.items():
         tooltip_name_with_hyphen = tooltip_name.replace("_", "-")
         path = f"/{tooltip_category_with_hyphen}/{tooltip_name_with_hyphen}"
+        full_api_path = f"/api/tooltip{path}"
         tooltip_router.add_api_route(
             path=path,
             endpoint=lambda: tooltip_data,
             methods=["GET"],
-            tags=["tooltip", tooltip_category_with_hyphen]
+            tags=["tooltip", tooltip_category_with_hyphen],
+            operation_id=OPERATION_IDS.get(full_api_path)
         )
 app.include_router(tooltip_router)
+
+mcp_app = FastAPI()
+mcp = FastApiMCP(
+    app,
+    include_operations=INCLUDE_OPERATIONS
+)
+mcp.mount_http(mcp_app)
 
 
 if __name__ == "__main__":
@@ -214,4 +228,12 @@ if __name__ == "__main__":
         port=9100,
         ssl_certfile=os.environ.get("ASKCOS_SSL_CERT_FILE"),
         ssl_keyfile=os.environ.get("ASKCOS_SSL_KEY_FILE")
+    )
+
+    uvicorn.run(
+        mcp_app,
+        host="0.0.0.0",
+        port=9150,
+        ssl_certfile=os.environ.get("ASKCOS_MCP_SSL_CERT_FILE"),
+        ssl_keyfile=os.environ.get("ASKCOS_MCP_SSL_KEY_FILE")
     )

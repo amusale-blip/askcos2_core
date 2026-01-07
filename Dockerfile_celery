@@ -11,7 +11,8 @@ RUN pip install \
     bcrypt==4.3.0 \
     celery==5.2.7 \
     epam.indigo==1.4.3 \
-    fastapi==0.95.1 \
+    "fastapi[standard]"==0.121.3 \
+    fastapi-mcp==0.4.0 \
     hdbscan==0.8.33 \
     gevent==22.10.2 \
     networkx==2.6.3 \
@@ -20,11 +21,11 @@ RUN pip install \
     pillow==10.1.0 \
     protobuf==3.19.0 \
     pulp==2.6.0 \
-    pydantic==1.10.12 \
+    pydantic==2.12.4 \
     pymongo==4.4.1 \
     pytest==7.4.1 \
     "python-jose[cryptography]"==3.3.0 \
-    python-multipart==0.0.6 \
+    python-multipart==0.0.20 \
     pyyaml==6.0.1 \
     redis==4.3.6 \
     requests==2.31.0 \
@@ -32,7 +33,7 @@ RUN pip install \
     scipy==1.7.3 \
     svgutils==0.3.4 \
     tqdm==4.66.1 \
-    uvicorn==0.21.1
+    uvicorn==0.38.0
 
 RUN pip install python-keycloak==3.7.0 rdchiral==1.1.0
 
