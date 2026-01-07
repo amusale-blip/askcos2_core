@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -7,8 +7,8 @@ from wrappers.base import BaseResponse, BaseWrapper
 class FastFilterBatchInput(LowerCamelAliasModel):
     rxn_smiles: list[str] = Field(description="list of reaction SMILES")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "rxn_smiles": [
                     "CC.CC>>CCCC",
@@ -17,6 +17,7 @@ class FastFilterBatchInput(LowerCamelAliasModel):
                 ]
             }
         }
+    )
 
 
 class FastFilterBatchOutput(BaseModel):

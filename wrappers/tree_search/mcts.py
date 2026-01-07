@@ -3,7 +3,7 @@ import traceback
 import uuid
 from datetime import datetime
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from schemas.cluster import ClusterSetting
 from schemas.retro import RetroBackendOption
@@ -75,8 +75,24 @@ class ExpandOneOptions(LowerCamelAliasModel):
                     "by reverse application of the forward template"
     )
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(allow_population_by_field_name=True)
+
+
+def _hide_optional_fields(schema: dict[str, Any], model: Any) -> None:
+    """Helper function to remove specific fields from the generated schema."""
+    properties = schema.get("properties", {})
+
+    fields_to_drop = [
+        "max_iterations",
+        "max_chemicals",
+        "max_reactions",
+        "max_templates",
+        "buyables_source"
+    ]
+
+    for field in fields_to_drop:
+        # Using .pop(key, None) is safer than del if the key might be missing
+        properties.pop(field, None)
 
 
 class BuildTreeOptions(LowerCamelAliasModel):
@@ -187,15 +203,7 @@ class BuildTreeOptions(LowerCamelAliasModel):
         example=[]
     )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: dict[str, Any], model) -> None:
-            # dropping the optional fields from the example
-            del schema.get("properties")["max_iterations"]
-            del schema.get("properties")["max_chemicals"]
-            del schema.get("properties")["max_reactions"]
-            del schema.get("properties")["max_templates"]
-            del schema.get("properties")["buyables_source"]
+    model_config = ConfigDict(json_schema_extra=_hide_optional_fields)
 
 
 class EnumeratePathsOptions(LowerCamelAliasModel):

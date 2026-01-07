@@ -1,5 +1,5 @@
 import json
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from typing import Literal
 from wrappers import register_wrapper
@@ -38,10 +38,11 @@ class PathwayRankerInput(LowerCamelAliasModel):
     )
 
     if example is not None:
-        class Config:
-            schema_extra = {
+        model_config = ConfigDict(
+            json_schema_extra={
                 "example": example
             }
+        )
 
 
 class PathwayRankerResult(BaseModel):

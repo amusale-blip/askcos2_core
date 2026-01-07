@@ -1,4 +1,4 @@
-from pydantic import BaseModel, confloat, Field, RootModel
+from pydantic import BaseModel, ConfigDict, confloat, Field, RootModel
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseWrapper
@@ -49,8 +49,8 @@ class SolubilityInput(LowerCamelAliasModel):
         description="query batch size for solubility prediction"
     )
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "query_batch_size": 10,
                 "task_list": [
@@ -67,6 +67,7 @@ class SolubilityInput(LowerCamelAliasModel):
                 ]
             }
         }
+    )
 
 
 class SolubilityOutput(BaseModel):
