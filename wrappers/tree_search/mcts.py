@@ -18,7 +18,7 @@ from wrappers.base import BaseResponse, BaseWrapper
 class ExpandOneOptions(LowerCamelAliasModel):
     # aliasing to v1 fields
     template_max_count: int = Field(default=100, alias="template_count")
-    template_max_cum_prob: int = Field(default=0.995, alias="max_cum_template_prob")
+    template_max_cum_prob: float = Field(default=0.995, alias="max_cum_template_prob")
     banned_chemicals: list[str] = Field(
         default_factory=list,
         description="banned chemicals (in addition to user banned chemicals)",
