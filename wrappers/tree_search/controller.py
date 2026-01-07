@@ -2,7 +2,7 @@ import re
 import uuid
 from datetime import datetime
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from typing import Annotated, Any, Literal
 from utils.oauth2 import oauth2_scheme
@@ -72,6 +72,8 @@ class TreeSearchResult(BaseModel):
     uds: UDS | None = None
     version: int | str | None = 2
     result_id: str = ""
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TreeSearchOutput(BaseModel):

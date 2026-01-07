@@ -26,7 +26,7 @@ class GeneralSelectivityOutput(BaseModel):
 
 
 class GeneralSelectivityResponse(BaseResponse):
-    result: list[GeneralSelectivityResult] | None
+    result: list[GeneralSelectivityResult] | None = None
 
 
 @register_wrapper(

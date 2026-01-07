@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from typing import Literal
 from wrappers import register_wrapper
@@ -56,9 +56,11 @@ class GeneralSelectivityResult(BaseModel):
     prob: float
     rank: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class GeneralSelectivityResponse(BaseResponse):
-    result: list[GeneralSelectivityResult] | None
+    result: list[GeneralSelectivityResult] | None = None
 
 
 @register_wrapper(
