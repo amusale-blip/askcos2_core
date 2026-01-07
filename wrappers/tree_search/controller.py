@@ -66,6 +66,8 @@ class UDS(BaseModel):
     pathways: list[list[dict]]
     pathways_properties: list[dict]
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class TreeSearchResult(BaseModel):
     stats: dict[str, Any] | None = None
