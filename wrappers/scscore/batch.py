@@ -20,7 +20,7 @@ class SCScoreBatchOutput(BaseModel):
 
 
 class SCScoreBatchResponse(BaseResponse):
-    result: dict[str, float] | None
+    result: dict[str, float] | None = None
 
 
 @register_wrapper(

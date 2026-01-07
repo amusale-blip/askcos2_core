@@ -76,18 +76,20 @@ class ModelMetadata(BaseModel):
     model_score: float
     normalized_model_score: float
     rank: int
-    reaction_id: str | None
-    reaction_set: str | None
+    reaction_id: str | None = None
+    reaction_set: str | None = None
     source: dict
+
 
 class ModelReactionProperties(BaseModel):
     canonical_reaction_smiles: str
     mapped_smiles: str
     plausibility: float
-    reacting_atoms: list[int] | None
-    selec_error: bool | None
-    cluster_id: int | None
-    cluster_name: str | None
+    reacting_atoms: list[int] | None = None
+    selec_error: bool | None = None
+    cluster_id: int | None = None
+    cluster_name: str | None = None
+
 
 class RetroResult(BaseModel):
     # from retro_controller
@@ -107,7 +109,7 @@ class ExpandOneOutput(BaseModel):
 
 
 class ExpandOneResponse(BaseResponse):
-    result: list[RetroResult] | dict[int, list[RetroResult]] | None
+    result: list[RetroResult] | dict[int, list[RetroResult]] | None = None
 
 
 @register_wrapper(

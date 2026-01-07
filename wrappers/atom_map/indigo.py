@@ -23,7 +23,7 @@ class AtomMapIndigoOutput(BaseModel):
 
 
 class AtomMapIndigoResponse(BaseResponse):
-    result: list[str] | None
+    result: list[str] | None = None
 
 
 @register_wrapper(

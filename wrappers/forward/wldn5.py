@@ -43,7 +43,7 @@ class ForwardWLDN5Output(BaseModel):
 
 
 class ForwardWLDN5Response(BaseResponse):
-    result: list[list[ForwardWLDN5Result]] | None
+    result: list[list[ForwardWLDN5Result]] | None = None
 
 
 @register_wrapper(

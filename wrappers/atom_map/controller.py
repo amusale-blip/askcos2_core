@@ -28,7 +28,7 @@ class AtomMapOutput(BaseModel):
 
 
 class AtomMapResponse(BaseResponse):
-    result: list[str | None] | None
+    result: list[str | None] | None = None
 
 
 @register_wrapper(

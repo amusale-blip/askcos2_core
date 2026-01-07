@@ -20,7 +20,7 @@ class SCScoreOutput(BaseModel):
 
 
 class SCScoreResponse(BaseResponse):
-    result: float | None
+    result: float | None = None
 
 
 @register_wrapper(

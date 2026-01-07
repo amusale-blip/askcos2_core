@@ -48,7 +48,7 @@ class PathwayRankerInput(LowerCamelAliasModel):
 class PathwayRankerResult(BaseModel):
     scores: list
     encoded_trees: list
-    clusters: list | None
+    clusters: list | None = None
 
 
 class PathwayRankerOutput(BaseModel):
@@ -58,7 +58,7 @@ class PathwayRankerOutput(BaseModel):
 
 
 class PathwayRankerResponse(BaseResponse):
-    result: PathwayRankerResult | None
+    result: PathwayRankerResult | None = None
 
 
 @register_wrapper(

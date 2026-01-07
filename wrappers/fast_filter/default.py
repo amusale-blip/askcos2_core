@@ -36,7 +36,7 @@ class FastFilterOutput(BaseModel):
 
 
 class FastFilterResponse(BaseResponse):
-    result: FastFilterResult | None
+    result: FastFilterResult | None = None
 
 
 @register_wrapper(

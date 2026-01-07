@@ -49,7 +49,7 @@ class ForwardResult(BaseModel):
 
 
 class ForwardResponse(BaseResponse):
-    result: list[list[ForwardResult]] | None
+    result: list[list[ForwardResult]] | None = None
 
 
 @register_wrapper(

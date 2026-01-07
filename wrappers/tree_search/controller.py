@@ -68,8 +68,8 @@ class UDS(BaseModel):
 
 
 class TreeSearchResult(BaseModel):
-    stats: dict[str, Any] | None
-    uds: UDS | None
+    stats: dict[str, Any] | None = None
+    uds: UDS | None = None
     version: int | str | None = 2
     result_id: str = ""
 
@@ -79,7 +79,7 @@ class TreeSearchOutput(BaseModel):
 
 
 class TreeSearchResponse(BaseResponse):
-    result: TreeSearchResult | None
+    result: TreeSearchResult | None = None
 
 
 @register_wrapper(

@@ -266,8 +266,8 @@ class UDS(BaseModel):
 
 
 class MCTSResult(BaseModel):
-    stats: dict[str, Any] | None
-    uds: UDS | None
+    stats: dict[str, Any] | None = None
+    uds: UDS | None = None
     version: int | str | None = 2
     result_id: str = ""
 
@@ -279,7 +279,7 @@ class MCTSOutput(BaseModel):
 
 
 class MCTSResponse(BaseResponse):
-    result: MCTSResult | None
+    result: MCTSResult | None = None
 
 
 @register_wrapper(

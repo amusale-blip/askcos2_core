@@ -21,7 +21,7 @@ class FastFilterWThresholdOutput(BaseModel):
 
 
 class FastFilterWThresholdResponse(BaseResponse):
-    result: FastFilterWThresholdResult | None
+    result: FastFilterWThresholdResult | None = None
 
 
 @register_wrapper(

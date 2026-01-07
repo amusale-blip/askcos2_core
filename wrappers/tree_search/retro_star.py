@@ -271,8 +271,8 @@ class UDS(BaseModel):
 
 
 class RetroStarResult(BaseModel):
-    stats: dict[str, Any] | None
-    uds: UDS | None
+    stats: dict[str, Any] | None = None
+    uds: UDS | None = None
     version: int | str | None = "retro_star_0"
     result_id: str = ""
 
@@ -284,7 +284,7 @@ class RetroStarOutput(BaseModel):
 
 
 class RetroStarResponse(BaseResponse):
-    result: RetroStarResult | None
+    result: RetroStarResult | None = None
 
 
 @register_wrapper(

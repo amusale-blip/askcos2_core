@@ -27,7 +27,7 @@ class FastFilterBatchOutput(BaseModel):
 
 
 class FastFilterBatchResponse(BaseResponse):
-    result: list[float] | None
+    result: list[float] | None = None
 
 
 @register_wrapper(

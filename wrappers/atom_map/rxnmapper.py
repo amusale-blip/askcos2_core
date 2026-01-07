@@ -28,7 +28,7 @@ class AtomMapRXNMapperOutput(BaseModel):
 
 
 class AtomMapRXNMapperResponse(BaseResponse):
-    result: list[RXNMapperResult | None] | None
+    result: list[RXNMapperResult | None] | None = None
 
 
 @register_wrapper(

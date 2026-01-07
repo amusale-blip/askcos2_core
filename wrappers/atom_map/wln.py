@@ -23,7 +23,7 @@ class AtomMapWLNOutput(BaseModel):
 
 
 class AtomMapWLNResponse(BaseResponse):
-    result: list[str] | None
+    result: list[str] | None = None
 
 
 @register_wrapper(
