@@ -50,8 +50,8 @@ class CeleryTaskController:
         try:
             if state == states.SUCCESS:
                 output = result.result                  # This is the return value
-                if "__root__" in output:
-                    output = output["__root__"]         # Reverse parse for list return
+                if "root" in output:
+                    output = output["root"]         # Reverse parse for root return
                 resp["output"] = output
 
                 # Additional error handling to override state based on output

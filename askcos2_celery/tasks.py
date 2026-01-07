@@ -12,7 +12,7 @@ def base_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -24,7 +24,7 @@ def legacy_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = adapter.input_class(**input)
-    response = adapter.call_sync(input).dict()
+    response = adapter.call_sync(input).model_dump()
 
     return response
 
@@ -36,7 +36,7 @@ def context_recommender_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -48,7 +48,7 @@ def count_analogs_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -60,7 +60,7 @@ def forward_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -72,7 +72,7 @@ def general_selectivity_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -84,7 +84,7 @@ def impurity_predictor_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -96,7 +96,7 @@ def pathway_ranker_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -108,7 +108,7 @@ def retro_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -120,7 +120,7 @@ def site_selectivity_task(module: str, input: dict) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input).dict()
+    response = wrapper.call_sync(input).model_dump()
 
     return response
 
@@ -149,7 +149,7 @@ def tree_search_expand_one_task(module: str, input: dict, token: str) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input, token).dict()
+    response = wrapper.call_sync(input, token).model_dump()
 
     return response
 
@@ -161,7 +161,7 @@ def tree_search_mcts_task(module: str, input: dict, token: str) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input, token).dict()
+    response = wrapper.call_sync(input, token).model_dump()
 
     return response
 
@@ -173,7 +173,7 @@ def tree_search_retro_star_task(module: str, input: dict, token: str) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input, token).dict()
+    response = wrapper.call_sync(input, token).model_dump()
 
     return response
 
@@ -185,7 +185,7 @@ def tree_search_task(module: str, input: dict, token: str) -> dict:
 
     # Reconstruct Input object from, and convert Output object to dict
     input = wrapper.input_class(**input)
-    response = wrapper.call_sync(input, token).dict()
+    response = wrapper.call_sync(input, token).model_dump()
 
     return response
 
