@@ -213,12 +213,12 @@ for tooltip_category, content in TOOLTIPS.items():
         )
 app.include_router(tooltip_router)
 
-mcp_app = FastAPI()
+# mcp_app = FastAPI()
 mcp = FastApiMCP(
     app,
     include_operations=INCLUDE_OPERATIONS
 )
-mcp.mount_http(mcp_app)
+mcp.mount_http(app)
 
 
 if __name__ == "__main__":
@@ -230,10 +230,10 @@ if __name__ == "__main__":
         ssl_keyfile=os.environ.get("ASKCOS_SSL_KEY_FILE")
     )
 
-    uvicorn.run(
-        mcp_app,
-        host="0.0.0.0",
-        port=9150,
-        ssl_certfile=os.environ.get("ASKCOS_MCP_SSL_CERT_FILE"),
-        ssl_keyfile=os.environ.get("ASKCOS_MCP_SSL_KEY_FILE")
-    )
+    # uvicorn.run(
+    #     mcp_app,
+    #     host="0.0.0.0",
+    #     port=9150,
+    #     ssl_certfile=os.environ.get("ASKCOS_MCP_SSL_CERT_FILE"),
+    #     ssl_keyfile=os.environ.get("ASKCOS_MCP_SSL_KEY_FILE")
+    # )
