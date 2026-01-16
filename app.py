@@ -96,10 +96,19 @@ router.add_api_route(
     tags=["admin"]
 )
 router.add_api_route(
+    path="/mcp-login",
+    endpoint=oauth2.mcp_login,
+    methods=["POST"],
+    response_model=oauth2.Token,
+    tags=["admin"],
+    operation_id=OPERATION_IDS.get(("/api/admin/mcp-login", "POST"))
+)
+router.add_api_route(
     path="/logout",
     endpoint=oauth2.logout,
     methods=["POST"],
-    tags=["admin"]
+    tags=["admin"],
+    operation_id=OPERATION_IDS.get(("/api/admin/logout", "POST"))
 )
 app.include_router(router)
 
@@ -127,6 +136,8 @@ for wrapper in wrapper_registry:
             )
             method_name_with_hyphen = method_name.replace("_", "-")
             full_api_path = f"/api/{prefix_with_hyphen}/{method_name_with_hyphen}"
+            operation_key = (full_api_path.rstrip("/"), bind_types[0])
+            operation_id = OPERATION_IDS.get(operation_key)
             router.add_api_route(
                 path=f"/{method_name_with_hyphen}",
                 endpoint=getattr(wrapper, method_name),
@@ -134,7 +145,7 @@ for wrapper in wrapper_registry:
                 include_in_schema=include_in_schema,
                 response_model_by_alias="retro" not in prefix,
                 tags=[prefix_with_hyphen.split("/")[0]],
-                operation_id=OPERATION_IDS.get(full_api_path)
+                operation_id=operation_id
             )
         app.include_router(router)
 
@@ -187,12 +198,14 @@ for util in util_registry:
                 tag = f"utils/{tag}"
 
             full_api_path = f"/api/{prefix_with_hyphen}{path}"
+            operation_key = (full_api_path.rstrip("/"), bind_types[0])
+            operation_id = OPERATION_IDS.get(operation_key)
             router.add_api_route(
                 path=path,
                 endpoint=getattr(util, method_name),
                 methods=bind_types,
                 tags=[tag],
-                operation_id=OPERATION_IDS.get(full_api_path)
+                operation_id=operation_id
             )
         app.include_router(router)
 
@@ -204,12 +217,14 @@ for tooltip_category, content in TOOLTIPS.items():
         tooltip_name_with_hyphen = tooltip_name.replace("_", "-")
         path = f"/{tooltip_category_with_hyphen}/{tooltip_name_with_hyphen}"
         full_api_path = f"/api/tooltip{path}"
+        operation_key = (full_api_path.rstrip("/"), "GET")
+        operation_id = OPERATION_IDS.get(operation_key)
         tooltip_router.add_api_route(
             path=path,
             endpoint=lambda: tooltip_data,
             methods=["GET"],
             tags=["tooltip", tooltip_category_with_hyphen],
-            operation_id=OPERATION_IDS.get(full_api_path)
+            operation_id=operation_id
         )
 app.include_router(tooltip_router)
 

@@ -94,6 +94,24 @@ async def login_for_access_token(
     return token_dict
 
 
+class MCPLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+async def mcp_login(request: MCPLoginRequest, response: Response):
+    """Login endpoint for MCP clients."""
+
+    return await login_for_access_token(
+        response=response,
+        form_data=OAuth2PasswordRequestForm(
+            username=request.username,
+            password=request.password,
+            scope=""
+        )
+    )
+
+
 async def logout(response: Response):
     response.delete_cookie("access_token")
 

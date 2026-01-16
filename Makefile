@@ -12,6 +12,11 @@ deploy:
 update:
 	bash deploy.sh update -n -v $(TAG)
 
+update-core:
+	docker build -f Dockerfile_app -t ${ASKCOS_REGISTRY}/app:2.0 .
+	docker build -f Dockerfile_celery -t ${ASKCOS_REGISTRY}/celery:2.0 .
+	docker compose up -d --force-recreate web app celery_workers
+
 start:
 	bash deploy.sh start
 
