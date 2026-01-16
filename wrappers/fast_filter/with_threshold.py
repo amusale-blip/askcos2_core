@@ -21,7 +21,7 @@ class FastFilterWThresholdOutput(BaseModel):
 
 
 class FastFilterWThresholdResponse(BaseResponse):
-    result: FastFilterWThresholdResult | None
+    result: FastFilterWThresholdResult | None = None
 
 
 @register_wrapper(
@@ -37,7 +37,7 @@ class FastFilterWThresholdWrapper(BaseWrapper):
     def call_raw(self, input: FastFilterWThresholdInput) -> FastFilterWThresholdOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/filter_with_threshold",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()

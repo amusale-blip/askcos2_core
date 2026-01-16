@@ -22,13 +22,13 @@ class BuyableInput(BaseModel):
     properties: list[dict] = []
 
 class Buyable(BaseModel):
-    id: str = Field(default=None, alias="_id")
-    smiles: str = None
+    id: str | None = Field(default=None, alias="_id")
+    smiles: str | None = None
     ppg: float = 0.0
-    lead_time: str = None
+    lead_time: str | None = None
     source: str = ""
-    properties: list[BuyableProperty] = None
-    similarity: float = None
+    properties: list[BuyableProperty] | None = None
+    similarity: float | None = None
 
 
 class PropertyCriteria(BaseModel):
@@ -45,7 +45,7 @@ class LookupInput(LowerCamelAliasModel):
 
 
 class LookupResponse(BaseModel):
-    result: dict | None
+    result: dict | None = None
     query: LookupInput
 
 
@@ -60,7 +60,7 @@ class SourcesResponse(BaseModel):
 class SearchInput(LowerCamelAliasModel):
     q: str = ""
     source: list[str] | str | None = None
-    properties: list[PropertyCriteria] = None
+    properties: list[PropertyCriteria] | None = None
     regex: bool = False
     sim_threshold: float = 1.0
     returnLimit: int = 100
@@ -70,7 +70,7 @@ class SearchInput(LowerCamelAliasModel):
 
 
 class SearchResponse(BaseModel):
-    result: list[Buyable] | None
+    result: list[Buyable] | None = None
     search: str
 
 
@@ -124,7 +124,7 @@ class Buyables:
         return resp
 
     @staticmethod
-    def retrieve(pk: str = None) -> Response:
+    def retrieve(pk: str | None = None) -> Response:
         pricer = get_util_registry().get_util(module="pricer")
 
         resp = {"error": None, "result": None}
@@ -161,7 +161,7 @@ class Buyables:
     def create(
         doc: Buyable,
         allowOverwrite: bool = True,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         """Add new buyable entry"""
         user_controller = get_util_registry().get_util(module="user_controller")
@@ -185,7 +185,7 @@ class Buyables:
         }
 
         try:
-            result = pricer.add(doc.dict(), allow_overwrite=allowOverwrite)
+            result = pricer.add(doc.model_dump(), allow_overwrite=allowOverwrite)
         except NotImplementedError:
             resp["error"] = "Adding new items is not supported."
 
@@ -224,7 +224,7 @@ class Buyables:
     def update(
         pk: str,
         doc: Buyable,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         """Update single buyables entry by mongo _id"""
         user_controller = get_util_registry().get_util(module="user_controller")
@@ -240,7 +240,7 @@ class Buyables:
 
         resp = {"error": None, "result": None}
         try:
-            result = pricer.update(pk, doc.dict())
+            result = pricer.update(pk, doc.model_dump())
         except NotImplementedError:
             resp["error"] = "Updating items by ID is not supported."
 
@@ -269,8 +269,8 @@ class Buyables:
 
     @staticmethod
     def destroy(
-        pk: str = None,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        pk: str | None = None,
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         """Delete a specific buyables entry from the database"""
         user_controller = get_util_registry().get_util(module="user_controller")
@@ -341,7 +341,7 @@ class Buyables:
         format: Annotated[str, Form()],
         returnLimit: Annotated[int, Form()],
         allowOverwrite: Annotated[bool, Form()],
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         """API endpoint for uploading buyables data."""
         user_controller = get_util_registry().get_util(module="user_controller")

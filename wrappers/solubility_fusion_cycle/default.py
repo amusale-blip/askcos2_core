@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 from rdkit import Chem
 from rdkit.Chem.Descriptors import ExactMolWt
 from schemas.base import LowerCamelAliasModel
@@ -12,8 +12,8 @@ class SolubilityFusionCycleInput(LowerCamelAliasModel):
     temperature: list[float]
     density: list | None = None
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "solvent_smiles": ["CC(=O)O", "CC(=O)O"],
                 "solute_smiles": ["C(CCC(=O)O)CC(=O)O", "C(CCC(=O)O)CC(=O)O"],
@@ -21,6 +21,7 @@ class SolubilityFusionCycleInput(LowerCamelAliasModel):
                 "density": [12.5, 0.0],
             }
         }
+    )
 
 
 class SolubilityFusionCycleResult(BaseModel):
@@ -52,8 +53,8 @@ class ConvertedSolubilityResult(BaseModel):
     gamma: float
 
 
-class SolubilityFusionCycleResponse(BaseModel):
-    __root__: list[ConvertedSolubilityResult] | None
+class SolubilityFusionCycleResponse(RootModel[list[ConvertedSolubilityResult] | None]):
+    pass
 
 
 @register_wrapper(
@@ -132,6 +133,6 @@ class SolubilityFusionCycleWrapper(BaseWrapper):
                       f"with the following error message {output.error}"
             result = None
 
-        response = SolubilityFusionCycleResponse(__root__=result)
+        response = SolubilityFusionCycleResponse(result)
 
         return response

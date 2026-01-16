@@ -20,7 +20,7 @@ class SCScoreBatchOutput(BaseModel):
 
 
 class SCScoreBatchResponse(BaseResponse):
-    result: dict[str, float] | None
+    result: dict[str, float] | None = None
 
 
 @register_wrapper(
@@ -34,7 +34,7 @@ class SCScoreBatchWrapper(BaseWrapper):
     prefixes = ["scscore/batch"]
 
     def call_raw(self, input: SCScoreBatchInput) -> SCScoreBatchOutput:
-        json = input.dict()
+        json = input.model_dump()
         # aliasing, for backward compatibility (with frontend calls)
         json["smiles_list"] = json.pop("smiles")
 

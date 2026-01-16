@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from schemas.base import LowerCamelAliasModel
 from typing import Any
 from wrappers import register_wrapper
@@ -17,8 +17,9 @@ class RetroTemplEnumInput(LowerCamelAliasModel):
         description="reaction set to be queried against",
     )
 
-    @validator("model_name")
-    def check_reaction_set(cls, v, values):
+    @field_validator("model_name")
+    @classmethod
+    def check_reaction_set(cls, v: str) -> str:
         default_path = "configs.module_config_full"
         config_path = os.environ.get(
             "MODULE_CONFIG_PATH", default_path
@@ -60,7 +61,7 @@ class RetroTemplEnumWrapper(BaseWrapper):
     prefixes = ["retro/template_enumeration"]
 
     def call_raw(self, input: RetroTemplEnumInput) -> RetroTemplEnumOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
 
         response = self.session_sync.post(
             f"{self.prediction_url}",
@@ -89,7 +90,7 @@ class RetroTemplEnumWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

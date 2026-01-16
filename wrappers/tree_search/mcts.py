@@ -3,7 +3,7 @@ import traceback
 import uuid
 from datetime import datetime
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from schemas.cluster import ClusterSetting
 from schemas.retro import RetroBackendOption
@@ -18,7 +18,7 @@ from wrappers.base import BaseResponse, BaseWrapper
 class ExpandOneOptions(LowerCamelAliasModel):
     # aliasing to v1 fields
     template_max_count: int = Field(default=100, alias="template_count")
-    template_max_cum_prob: int = Field(default=0.995, alias="max_cum_template_prob")
+    template_max_cum_prob: float = Field(default=0.995, alias="max_cum_template_prob")
     banned_chemicals: list[str] = Field(
         default_factory=list,
         description="banned chemicals (in addition to user banned chemicals)",
@@ -75,8 +75,27 @@ class ExpandOneOptions(LowerCamelAliasModel):
                     "by reverse application of the forward template"
     )
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        validate_by_name=True,
+        validate_by_alias=True
+    )
+
+
+def _hide_optional_fields(schema: dict[str, Any], model: Any) -> None:
+    """Helper function to remove specific fields from the generated schema."""
+    properties = schema.get("properties", {})
+
+    fields_to_drop = [
+        "max_iterations",
+        "max_chemicals",
+        "max_reactions",
+        "max_templates",
+        "buyables_source"
+    ]
+
+    for field in fields_to_drop:
+        # Using .pop(key, None) is safer than del if the key might be missing
+        properties.pop(field, None)
 
 
 class BuildTreeOptions(LowerCamelAliasModel):
@@ -187,15 +206,7 @@ class BuildTreeOptions(LowerCamelAliasModel):
         example=[]
     )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: dict[str, Any], model) -> None:
-            # dropping the optional fields from the example
-            del schema.get("properties")["max_iterations"]
-            del schema.get("properties")["max_chemicals"]
-            del schema.get("properties")["max_reactions"]
-            del schema.get("properties")["max_templates"]
-            del schema.get("properties")["buyables_source"]
+    model_config = ConfigDict(json_schema_extra=_hide_optional_fields)
 
 
 class EnumeratePathsOptions(LowerCamelAliasModel):
@@ -255,8 +266,8 @@ class UDS(BaseModel):
 
 
 class MCTSResult(BaseModel):
-    stats: dict[str, Any] | None
-    uds: UDS | None
+    stats: dict[str, Any] | None = None
+    uds: UDS | None = None
     version: int | str | None = 2
     result_id: str = ""
 
@@ -268,7 +279,7 @@ class MCTSOutput(BaseModel):
 
 
 class MCTSResponse(BaseResponse):
-    result: MCTSResult | None
+    result: MCTSResult | None = None
 
 
 @register_wrapper(
@@ -319,7 +330,7 @@ class MCTSWrapper(BaseWrapper):
         banned_chemicals_controller = get_util_registry().get_util(
             module="banned_chemicals"
         )
-        user_banned_chemicals = banned_chemicals_controller.get(token=token).__root__
+        user_banned_chemicals = banned_chemicals_controller.get(token=token).root
         user_banned_chemicals = [entry.smiles for entry in user_banned_chemicals
                                  if entry.active]
         input.expand_one_options.banned_chemicals.extend(user_banned_chemicals)
@@ -330,7 +341,7 @@ class MCTSWrapper(BaseWrapper):
         banned_reactions_controller = get_util_registry().get_util(
             module="banned_reactions"
         )
-        user_banned_reactions = banned_reactions_controller.get(token=token).__root__
+        user_banned_reactions = banned_reactions_controller.get(token=token).root
         user_banned_reactions = [entry.smiles for entry in user_banned_reactions
                                  if entry.active]
         input.expand_one_options.banned_reactions.extend(user_banned_reactions)
@@ -416,7 +427,7 @@ class MCTSWrapper(BaseWrapper):
         input.result_id = str(uuid.uuid4())
         # Note that we can't use task_id as the result_id,
         # as it needs to be known beforehand
-        settings = input.dict()
+        settings = input.model_dump()
         settings = {k: v for k, v in settings.items() if "option" in k}
 
         saved_results = TreeSearchSavedResults(
@@ -440,7 +451,7 @@ class MCTSWrapper(BaseWrapper):
 
         from askcos2_celery.tasks import tree_search_mcts_task
         async_result = tree_search_mcts_task.apply_async(
-            args=(self.name, input.dict(), token), priority=priority)
+            args=(self.name, input.model_dump(), token), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -451,7 +462,7 @@ class MCTSWrapper(BaseWrapper):
     @staticmethod
     def process_input(input: MCTSInput) -> dict:
         build_tree_options = input.build_tree_options
-        dict_input = input.dict()
+        dict_input = input.model_dump()
 
         termination_logic = {"and": [], "or": []}
 

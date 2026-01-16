@@ -47,7 +47,7 @@ class ClusterOutput(BaseModel):
 
 
 class ClusterResponse(BaseResponse):
-    result: list[list[int] | dict[str, str]] | None
+    result: list[list[int] | dict[str, str]] | None = None
 
 
 @register_wrapper(

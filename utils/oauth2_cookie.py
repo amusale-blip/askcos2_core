@@ -4,16 +4,15 @@ from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.requests import Request
 from starlette.status import HTTP_401_UNAUTHORIZED
-from typing import Dict, Optional
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
     def __init__(
         self,
         tokenUrl: str,
-        scheme_name: Optional[str] = None,
-        scopes: Optional[Dict[str, str]] = None,
-        description: Optional[str] = None,
+        scheme_name: str | None = None,
+        scopes: dict[str, str] | None = None,
+        description: str | None = None,
         auto_error: bool = True,
     ):
         if not scopes:
@@ -26,7 +25,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
             auto_error=auto_error,
         )
 
-    async def __call__(self, request: Request) -> Optional[str]:
+    async def __call__(self, request: Request) -> str | None:
         authorization = request.headers.get("Authorization")
     
         if not authorization:

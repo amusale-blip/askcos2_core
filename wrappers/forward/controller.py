@@ -49,7 +49,7 @@ class ForwardResult(BaseModel):
 
 
 class ForwardResponse(BaseResponse):
-    result: list[list[ForwardResult]] | None
+    result: list[list[ForwardResult]] | None = None
 
 
 @register_wrapper(
@@ -101,7 +101,7 @@ class ForwardController(BaseWrapper):
         """
         from askcos2_celery.tasks import forward_task
         async_result = forward_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

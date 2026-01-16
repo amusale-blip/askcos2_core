@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -7,8 +7,8 @@ from wrappers.base import BaseResponse, BaseWrapper
 class FastFilterBatchInput(LowerCamelAliasModel):
     rxn_smiles: list[str] = Field(description="list of reaction SMILES")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "rxn_smiles": [
                     "CC.CC>>CCCC",
@@ -17,6 +17,7 @@ class FastFilterBatchInput(LowerCamelAliasModel):
                 ]
             }
         }
+    )
 
 
 class FastFilterBatchOutput(BaseModel):
@@ -26,7 +27,7 @@ class FastFilterBatchOutput(BaseModel):
 
 
 class FastFilterBatchResponse(BaseResponse):
-    result: list[float] | None
+    result: list[float] | None = None
 
 
 @register_wrapper(
@@ -42,7 +43,7 @@ class FastFilterBatchWrapper(BaseWrapper):
     def call_raw(self, input: FastFilterBatchInput) -> FastFilterBatchOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/fast_filter_evaluate_batch",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()

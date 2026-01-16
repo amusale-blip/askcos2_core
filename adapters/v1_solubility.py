@@ -1,5 +1,5 @@
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from wrappers.registry import get_wrapper_registry
 from wrappers.solubility.default import (
     SolubilityInput,
@@ -54,8 +54,8 @@ class V1SolubilityAsyncReturn(BaseModel):
     task_id: str
 
 
-class V1SolubilityResult(BaseModel):
-    __root__: list[SolubilityResult]
+class V1SolubilityResult(RootModel[list[SolubilityResult]]):
+    pass
 
 
 @register_adapter(
@@ -84,7 +84,7 @@ class V1SolubilityAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1SolubilityAsyncReturn(

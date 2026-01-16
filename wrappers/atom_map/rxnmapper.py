@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -7,12 +7,13 @@ from wrappers.base import BaseResponse, BaseWrapper
 class AtomMapRXNMapperInput(LowerCamelAliasModel):
     smiles: list[str] = Field(description="list of SMILES strings to be atom-mapped")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "smiles": ["CC.CC>>CCCC", "c1ccccc1>>C1CCCCC1"]
             }
         }
+    )
 
 
 class RXNMapperResult(BaseModel):
@@ -27,7 +28,7 @@ class AtomMapRXNMapperOutput(BaseModel):
 
 
 class AtomMapRXNMapperResponse(BaseResponse):
-    result: list[RXNMapperResult | None] | None
+    result: list[RXNMapperResult | None] | None = None
 
 
 @register_wrapper(

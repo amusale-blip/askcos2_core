@@ -51,7 +51,7 @@ class ReactionClassificationWrapper(BaseWrapper):
                  ) -> ReactionClassificationOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/reaction_class",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()

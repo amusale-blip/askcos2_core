@@ -79,10 +79,10 @@ class RetroResult(BaseModel):
     outcome: str
     model_score: float
     normalized_model_score: float
-    template: dict[str, Any] | None
-    reaction_id: str | None
-    reaction_set: str | None
-    reaction_data: dict[str, Any] | None
+    template: dict[str, Any] | None = None
+    reaction_id: str | None = None
+    reaction_set: str | None = None
+    reaction_data: dict[str, Any] | None = None
 
 
 class RetroResponse(BaseResponse):
@@ -151,7 +151,7 @@ class RetroController(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

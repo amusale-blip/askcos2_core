@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import Depends, Response
-from pydantic import BaseModel, constr, Field
+from pydantic import BaseModel, constr, Field, RootModel
 from typing import Annotated
 from utils import register_util
 from utils.base import BaseBanlistController
@@ -14,15 +14,15 @@ class BlacklistedReaction(BaseModel):
     """
     id: str = ""
     user: str
-    description: constr(max_length=1000) = None
+    description: constr(max_length=1000) | None = None
     created: datetime = Field(default_factory=datetime.now)
-    dt: constr(max_length=200) = None
+    dt: constr(max_length=200) | None = None
     smiles: constr(max_length=5000)
     active: bool = True
 
 
-class BlacklistedReactions(BaseModel):
-    __root__: list[BlacklistedReaction]
+class BlacklistedReactions(RootModel[list[BlacklistedReaction]]):
+    pass
 
 
 @register_util(name="banned_reactions")
@@ -65,17 +65,17 @@ class BannedReactionsController(BaseBanlistController):
             banned_reaction.id = str(r.get("_id"))
             banned_reactions.append(banned_reaction)
 
-        banned_reactions = BlacklistedReactions(__root__=banned_reactions)
+        banned_reactions = BlacklistedReactions(banned_reactions)
 
         return banned_reactions
 
     def post(
         self,
         description: str = "no description",
-        dt: str = None,
-        smiles: str = None,
+        dt: str | None = None,
+        smiles: str | None = None,
         active: bool = True,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> Response:
         """
         API endpoint for adding banned reactions.

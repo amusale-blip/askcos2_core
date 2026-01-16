@@ -103,7 +103,7 @@ class TreeAnalysisController(BaseWrapper):
             module="tree_search_results_controller"
         )
         result = results_controller.retrieve(result_id=input.result_id, token=token)
-        result = result.dict()
+        result = result.model_dump()
 
         if result["result_type"] == "ipp":
             raise HTTPException(
@@ -211,7 +211,7 @@ class TreeAnalysisController(BaseWrapper):
         """
         from askcos2_celery.tasks import tree_analysis_task
         async_result = tree_analysis_task.apply_async(
-            args=(self.name, input.dict(), token), priority=priority)
+            args=(self.name, input.model_dump(), token), priority=priority)
         task_id = async_result.id
 
         return task_id

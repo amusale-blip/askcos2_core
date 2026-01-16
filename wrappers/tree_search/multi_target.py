@@ -53,7 +53,7 @@ class MultiTargetOutput(BaseModel):
 
 
 class MultiTargetResponse(BaseResponse):
-    result: dict[str, dict[str, Any] | None] | None
+    result: dict[str, dict[str, Any] | None] | None = None
 
 
 @register_wrapper(

@@ -12,7 +12,7 @@ class BackendStatus(BaseModel):
     available_model_names: list[str]
     to_start: bool
     ready: bool
-    backend_url: str | None
+    backend_url: str | None = None
 
 
 class BackendStatusResponse(BaseModel):

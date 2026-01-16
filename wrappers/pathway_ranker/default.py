@@ -1,5 +1,5 @@
 import json
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from typing import Literal
 from wrappers import register_wrapper
@@ -38,16 +38,17 @@ class PathwayRankerInput(LowerCamelAliasModel):
     )
 
     if example is not None:
-        class Config:
-            schema_extra = {
+        model_config = ConfigDict(
+            json_schema_extra={
                 "example": example
             }
+        )
 
 
 class PathwayRankerResult(BaseModel):
     scores: list
     encoded_trees: list
-    clusters: list | None
+    clusters: list | None = None
 
 
 class PathwayRankerOutput(BaseModel):
@@ -57,7 +58,7 @@ class PathwayRankerOutput(BaseModel):
 
 
 class PathwayRankerResponse(BaseResponse):
-    result: PathwayRankerResult | None
+    result: PathwayRankerResult | None = None
 
 
 @register_wrapper(
@@ -87,7 +88,7 @@ class PathwayRankerWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import pathway_ranker_task
         async_result = pathway_ranker_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

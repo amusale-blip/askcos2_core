@@ -1,5 +1,5 @@
 from adapters import register_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Literal
 from wrappers.registry import get_wrapper_registry
 from wrappers.forward.wldn5 import (
@@ -60,8 +60,8 @@ class V1ForwardOutput(BaseModel):
     smiles: str
 
 
-class V1ForwardResult(BaseModel):
-    __root__: list[V1ForwardOutput]
+class V1ForwardResult(RootModel[list[V1ForwardOutput]]):
+    pass
 
 
 @register_adapter(
@@ -87,7 +87,7 @@ class V1ForwardAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1ForwardAsyncReturn(
@@ -118,7 +118,7 @@ class V1ForwardAdapter:
             prob=result.prob,
             mol_wt=result.mol_wt,
             smiles=result.outcome.smiles
-        )for result in results]
-        final_result = V1ForwardResult(__root__=converted_results)
+        ) for result in results]
+        final_result = V1ForwardResult(converted_results)
 
         return final_result

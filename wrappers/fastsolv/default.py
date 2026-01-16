@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, RootModel
 from rdkit import Chem
 from rdkit.Chem.Descriptors import ExactMolWt
 from schemas.base import LowerCamelAliasModel
@@ -11,14 +11,15 @@ class FastSolvInput(LowerCamelAliasModel):
     solute_smiles: list[str]
     temperature: list[float]
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "solvent_smiles": ["CC(=O)O", "CC(=O)O"],
                 "solute_smiles": ["C(CCC(=O)O)CC(=O)O", "C(CCC(=O)O)CC(=O)O"],
                 "temperature": [298.0, 500.0]
             }
         }
+    )
 
 
 class FastSolvResult(BaseModel):
@@ -44,9 +45,8 @@ class ConvertedSolubilityResult(BaseModel):
     uncertainty: float
 
 
-class FastSolvResponse(BaseModel):
-    # result: list[FastSolvResult]
-    __root__: list[ConvertedSolubilityResult]
+class FastSolvResponse(RootModel[list[ConvertedSolubilityResult]]):
+    pass
 
 
 @register_wrapper(
@@ -115,6 +115,6 @@ class FastSolvWrapper(BaseWrapper):
         #     message=message,
         #     result=result
         # )
-        response = FastSolvResponse(__root__=result)
+        response = FastSolvResponse(result)
 
         return response

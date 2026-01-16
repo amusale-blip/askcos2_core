@@ -14,7 +14,7 @@ class CacheController:
     prefixes = []
     methods_to_bind: dict[str, list[str]] = {}
 
-    def __init__(self, util_config: dict[str, Any] = None):
+    def __init__(self, util_config: dict[str, Any] | None = None):
         self.cache_maps = {}
         self.cache_size = 10000
 
@@ -52,7 +52,7 @@ class CacheController:
         input_hash = json.dumps(jsonable_encoder(input))
 
         collection = self.db[module_name]
-        _id = collection.insert_one(response.dict()).inserted_id
+        _id = collection.insert_one(response.model_dump()).inserted_id
         cache_map[input_hash] = _id
 
         while len(cache_map) >= self.cache_size:

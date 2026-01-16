@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from schemas.base import LowerCamelAliasModel
 from typing import Literal
 from wrappers import register_wrapper
@@ -21,8 +21,8 @@ class ForwardATResult(BaseModel):
     scores: list[float]
 
 
-class ForwardATOutput(BaseModel):
-    __root__: list[ForwardATResult]
+class ForwardATOutput(RootModel[list[ForwardATResult]]):
+    pass
 
 
 class ForwardATResponse(BaseResponse):
@@ -40,7 +40,7 @@ class ForwardATWrapper(BaseWrapper):
     prefixes = ["forward/augmented_transformer"]
 
     def call_raw(self, input: ForwardATInput) -> ForwardATOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
         model_name = input_as_dict["model_name"]
 
         response = self.session_sync.post(
@@ -49,7 +49,7 @@ class ForwardATWrapper(BaseWrapper):
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
-        output = ForwardATOutput(__root__=output)
+        output = ForwardATOutput(output)
 
         return output
 
@@ -70,7 +70,7 @@ class ForwardATWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import forward_task
         async_result = forward_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -84,7 +84,7 @@ class ForwardATWrapper(BaseWrapper):
         response = {
             "status_code": 200,
             "message": "",
-            "result": output.__root__
+            "result": output.root
         }
         response = ForwardATResponse(**response)
 

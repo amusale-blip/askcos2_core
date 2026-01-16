@@ -9,10 +9,10 @@ from utils import register_util
 
 
 class TemplateInput(LowerCamelAliasModel):
-    _id: str = None
-    ids: list[str] = None
-    field: str = None
-    template_set: str = None
+    _id: str | None = None
+    ids: list[str] | None = None
+    field: str | None = None
+    template_set: str | None = None
 
 
 TEMPLATE_ALIASES = {
@@ -129,7 +129,7 @@ class Template:
         cursor = self.collection.find(filter=query, projection=proj)
         result = {str(doc.pop("_id")): doc[field] if field else doc
                   for doc in cursor}
-        resp = {"result": result, "query": data.dict()}
+        resp = {"result": result, "query": data.model_dump()}
 
         return Response(
             content=json.dumps(resp),

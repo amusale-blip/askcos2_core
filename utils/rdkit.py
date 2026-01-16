@@ -26,7 +26,7 @@ __all__ = ['molecular_weight', 'RDKitUtil']
 class SmilesInput(BaseModel):
     smiles: str
     isomericSmiles: bool = True
-    reference: str = None
+    reference: str | None = None
 
 
 class MolfileInput(BaseModel):
@@ -68,7 +68,7 @@ class RDKitUtil:
         "get_core_fragment": ["POST"],
     }
 
-    def __init__(self, util_config: dict[str, Any] = None):
+    def __init__(self, util_config: dict[str, Any] | None = None):
         pass
 
     @staticmethod

@@ -2,7 +2,7 @@ import re
 import uuid
 from datetime import datetime
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from schemas.base import LowerCamelAliasModel
 from typing import Annotated, Any, Literal
 from utils.oauth2 import oauth2_scheme
@@ -66,12 +66,16 @@ class UDS(BaseModel):
     pathways: list[list[dict]]
     pathways_properties: list[dict]
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class TreeSearchResult(BaseModel):
-    stats: dict[str, Any] | None
-    uds: UDS | None
+    stats: dict[str, Any] | None = None
+    uds: UDS | None = None
     version: int | str | None = 2
     result_id: str = ""
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TreeSearchOutput(BaseModel):
@@ -79,7 +83,7 @@ class TreeSearchOutput(BaseModel):
 
 
 class TreeSearchResponse(BaseResponse):
-    result: TreeSearchResult | None
+    result: TreeSearchResult | None = None
 
 
 @register_wrapper(
@@ -173,7 +177,7 @@ class TreeSearchController(BaseWrapper):
         input.result_id = str(uuid.uuid4())
         # Note that we can't use task_id as the result_id,
         # as it needs to be known beforehand
-        settings = input.dict()
+        settings = input.model_dump()
         settings = {k: v for k, v in settings.items() if "option" in k}
 
         saved_results = TreeSearchSavedResults(
@@ -197,7 +201,7 @@ class TreeSearchController(BaseWrapper):
 
         from askcos2_celery.tasks import tree_search_task
         async_result = tree_search_task.apply_async(
-            args=(self.name, input.dict(), token), priority=priority)
+            args=(self.name, input.model_dump(), token), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -209,7 +213,7 @@ class TreeSearchController(BaseWrapper):
     def convert_input(
         input: TreeSearchInput, backend: str
     ) -> TreeSearchMCTSInput | TreeSearchRetroStarInput:
-        wrapper_input = input.dict()
+        wrapper_input = input.model_dump()
         del wrapper_input["backend"]
 
         if backend == "mcts":

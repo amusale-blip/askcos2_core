@@ -76,18 +76,20 @@ class ModelMetadata(BaseModel):
     model_score: float
     normalized_model_score: float
     rank: int
-    reaction_id: str | None
-    reaction_set: str | None
+    reaction_id: str | None = None
+    reaction_set: str | None = None
     source: dict
+
 
 class ModelReactionProperties(BaseModel):
     canonical_reaction_smiles: str
     mapped_smiles: str
     plausibility: float
-    reacting_atoms: list[int] | None
-    selec_error: bool | None
-    cluster_id: int | None
-    cluster_name: str | None
+    reacting_atoms: list[int] | None = None
+    selec_error: bool | None = None
+    cluster_id: int | None = None
+    cluster_name: str | None = None
+
 
 class RetroResult(BaseModel):
     # from retro_controller
@@ -107,7 +109,7 @@ class ExpandOneOutput(BaseModel):
 
 
 class ExpandOneResponse(BaseResponse):
-    result: list[RetroResult] | dict[int, list[RetroResult]] | None
+    result: list[RetroResult] | dict[int, list[RetroResult]] | None = None
 
 
 @register_wrapper(
@@ -137,7 +139,7 @@ class ExpandOneWrapper(BaseWrapper):
         except KeyError:
             response = self.session_sync.post(
                 self.prediction_url,
-                json=input.dict(),
+                json=input.model_dump(),
                 timeout=self.config["deployment"]["timeout"]
             )
             response = response.json()
@@ -171,7 +173,7 @@ class ExpandOneWrapper(BaseWrapper):
             banned_chemicals_controller = get_util_registry().get_util(
                 module="banned_chemicals"
             )
-            user_banned_chemicals = banned_chemicals_controller.get(token=token).__root__
+            user_banned_chemicals = banned_chemicals_controller.get(token=token).root
             user_banned_chemicals = [entry.smiles for entry in user_banned_chemicals
                                      if entry.active]
             input.banned_chemicals.extend(user_banned_chemicals)
@@ -186,7 +188,7 @@ class ExpandOneWrapper(BaseWrapper):
             banned_reactions_controller = get_util_registry().get_util(
                 module="banned_reactions"
             )
-            user_banned_reactions = banned_reactions_controller.get(token=token).__root__
+            user_banned_reactions = banned_reactions_controller.get(token=token).root
             user_banned_reactions = [entry.smiles for entry in user_banned_reactions
                                      if entry.active]
             input.banned_reactions.extend(user_banned_reactions)
@@ -232,7 +234,7 @@ class ExpandOneWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import tree_search_expand_one_task
         async_result = tree_search_expand_one_task.apply_async(
-            args=(self.name, input.dict(), token), priority=priority)
+            args=(self.name, input.model_dump(), token), priority=priority)
         task_id = async_result.id
 
         return task_id

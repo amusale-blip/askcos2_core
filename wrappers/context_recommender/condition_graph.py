@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -16,8 +16,8 @@ class ContextRecommenderResult(BaseModel):
     score: float
 
 
-class ContextRecommenderOutput(BaseModel):
-    __root__: list[ContextRecommenderResult]
+class ContextRecommenderOutput(RootModel[list[ContextRecommenderResult]]):
+    pass
 
 
 class ContextRecommenderResponse(BaseResponse):
@@ -37,11 +37,11 @@ class ContextRecommenderWrapper(BaseWrapper):
     def call_raw(self, input: ContextRecommenderInput) -> ContextRecommenderOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/api/v2/condition/GRAPH",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
-        output = ContextRecommenderOutput(__root__=output)
+        output = ContextRecommenderOutput(output)
 
         return output
 
@@ -55,7 +55,7 @@ class ContextRecommenderWrapper(BaseWrapper):
                          ) -> str:
         from askcos2_celery.tasks import context_recommender_task
         async_result = context_recommender_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id
@@ -69,7 +69,7 @@ class ContextRecommenderWrapper(BaseWrapper):
         response = {
             "status_code": 200,
             "message": "",
-            "result": output.__root__
+            "result": output.root
         }
         response = ContextRecommenderResponse(**response)
 

@@ -70,7 +70,7 @@ class V1ClusterAdapter:
         from askcos2_celery.tasks import legacy_task
 
         async_result = legacy_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         async_return = V1ClusterAsyncReturn(

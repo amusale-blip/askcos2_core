@@ -22,8 +22,8 @@ class V1SCScoreBatchAsyncReturn(BaseModel):
 
 
 class V1SCScoreBatchResult(BaseModel):
-    request: V1SCScoreBatchInput | None
-    result: dict[str, float] | None
+    request: V1SCScoreBatchInput | None = None
+    result: dict[str, float] | None = None
 
 
 @register_adapter(

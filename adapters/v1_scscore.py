@@ -19,7 +19,7 @@ class V1SCScoreAsyncReturn(BaseModel):
 
 
 class V1SCScoreResult(BaseModel):
-    request: V1SCScoreInput | None
+    request: V1SCScoreInput | None = None
     score: float
 
 

@@ -26,7 +26,7 @@ class GeneralSelectivityOutput(BaseModel):
 
 
 class GeneralSelectivityResponse(BaseResponse):
-    result: list[GeneralSelectivityResult] | None
+    result: list[GeneralSelectivityResult] | None = None
 
 
 @register_wrapper(
@@ -42,7 +42,7 @@ class GeneralSelectivityGNNWrapper(BaseWrapper):
     def call_raw(self, input: GeneralSelectivityInput) -> GeneralSelectivityOutput:
         response = self.session_sync.post(
             f"{self.prediction_url}/general_selectivity",
-            json=input.dict(),
+            json=input.model_dump(),
             timeout=self.config["deployment"]["timeout"]
         )
         output = response.json()
@@ -60,7 +60,7 @@ class GeneralSelectivityGNNWrapper(BaseWrapper):
                          ) -> str:
         from askcos2_celery.tasks import general_selectivity_task
         async_result = general_selectivity_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

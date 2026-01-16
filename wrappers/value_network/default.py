@@ -1,6 +1,6 @@
 import importlib
 import os
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, RootModel, field_validator
 from schemas.base import LowerCamelAliasModel
 from wrappers import register_wrapper
 from wrappers.base import BaseResponse, BaseWrapper
@@ -16,8 +16,8 @@ class ValueNetworkInput(LowerCamelAliasModel):
         example=["CS(=N)(=O)Cc1cccc(Br)c1", "CN(C)CCOC(c1ccccc1)c1ccccc1"]
     )
 
-    @validator("model_name")
-    def check_model_name(cls, v, values):
+    @field_validator("model_name")
+    def check_model_name(cls, v: str) -> str:
         default_path = "configs.module_config_full"
         config_path = os.environ.get(
             "MODULE_CONFIG_PATH", default_path
@@ -32,12 +32,12 @@ class ValueNetworkInput(LowerCamelAliasModel):
         return v
 
 
-class ValueNetworkResult(BaseModel):
-    __root__: list[float]
+class ValueNetworkResult(RootModel[list[float]]):
+    pass
 
 
-class ValueNetworkOutput(BaseModel):
-    __root__: ValueNetworkResult
+class ValueNetworkOutput(RootModel[ValueNetworkResult]):
+    pass
 
 
 class ValueNetworkResponse(BaseResponse):
@@ -55,7 +55,7 @@ class ValueNetworkWrapper(BaseWrapper):
     prefixes = ["value_network"]
 
     def call_raw(self, input: ValueNetworkInput) -> ValueNetworkOutput:
-        input_as_dict = input.dict()
+        input_as_dict = input.model_dump()
         model_name = input_as_dict["model_name"]
 
         response = self.session_sync.post(
@@ -82,7 +82,7 @@ class ValueNetworkWrapper(BaseWrapper):
         """
         from askcos2_celery.tasks import retro_task
         async_result = retro_task.apply_async(
-            args=(self.name, input.dict()), priority=priority)
+            args=(self.name, input.model_dump()), priority=priority)
         task_id = async_result.id
 
         return task_id

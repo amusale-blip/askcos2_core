@@ -18,17 +18,17 @@ class TreeSearchSavedResults(BaseModel):
     """
     Reimplemented SavedResults model
     """
-    user: str = None
-    description: constr(max_length=1000) = None
+    user: str | None = None
+    description: constr(max_length=1000) | None = None
     created: datetime = Field(default_factory=datetime.now)
     modified: datetime = Field(default_factory=datetime.now)
-    dt: constr(max_length=200) = None
-    result_id: constr(max_length=64) = None
+    dt: constr(max_length=200) | None = None
+    result_id: constr(max_length=64) | None = None
     result: dict | None = None
     settings: dict | None = None
     tags: list[str] | str | None = Field(default_factory=list)
     check_date: str | None = None
-    result_state: constr(max_length=64) = None
+    result_state: constr(max_length=64) | None = None
     result_type: str = "tree_builder"
     revision: int = 0
 
@@ -217,7 +217,7 @@ class TreeSearchResultsController:
             if not result.result_id:
                 result.result_id = str(uuid.uuid4())
 
-        self.collection.insert_one(result.dict())
+        self.collection.insert_one(result.model_dump())
 
         resp = {
             "success": True,
@@ -500,7 +500,7 @@ class TreeSearchResultsController:
         self,
         result_id: str,
         state: str,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> None:
         user_controller = get_util_registry().get_util(module="user_controller")
         user = user_controller.get_current_user(token)
@@ -518,7 +518,7 @@ class TreeSearchResultsController:
         self,
         result_id: str,
         result: BaseModel,
-        token: Annotated[str, Depends(oauth2_scheme)] = None
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None
     ) -> None:
         user_controller = get_util_registry().get_util(module="user_controller")
         user = user_controller.get_current_user(token)
@@ -527,7 +527,7 @@ class TreeSearchResultsController:
             "user": user.username,
             "result_id": result_id
         }
-        result_doc = result.dict()
+        result_doc = result.model_dump()
         if "result_id" not in result_doc or not result_doc["result_id"]:
             result_doc["result_id"] = result_id
 
