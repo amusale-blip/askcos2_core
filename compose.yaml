@@ -90,30 +90,30 @@ services:
     hostname: keycloak
     restart: always
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USERNAME}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak123}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
-      KC_HOSTNAME_PORT: 8443
-      KC_HTTP_ENABLED: "false"
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "true"
-      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/askcos.ssl.cert
-      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/askcos.ssl.key
-      KC_HTTPS_PORT: 8443
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_ENABLED: "false"
+      KC_HTTPS_CERTIFICATE_FILE: '/etc/ssl/certs/askcos.ssl.cert'
+      KC_HTTPS_CERTIFICATE_KEY_FILE: '/etc/ssl/private/askcos.ssl.key'
     ports:
-      - "8443:8443"
+      - "${KC_HTTPS_PORT}:${KC_HTTPS_PORT}"
     depends_on:
       keycloak-db:
         condition: service_healthy
-    command: start-dev --https-certificate-file=/opt/keycloak/certs/askcos.ssl.cert --https-certificate-key-file=/opt/keycloak/certs/askcos.ssl.key
+    command: start
     volumes:
       - keycloak_data:/opt/keycloak/data
-      - ./askcos.ssl.cert:/opt/keycloak/certs/askcos.ssl.cert:ro
-      - ./askcos.ssl.key:/opt/keycloak/certs/askcos.ssl.key:ro
+      - ./askcos.ssl.cert:/etc/ssl/certs/askcos.ssl.cert
+      - ./askcos.ssl.key:/etc/ssl/private/askcos.ssl.key
 
   keycloak-db:
     image: postgres:15-alpine
