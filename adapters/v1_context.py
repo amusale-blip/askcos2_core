@@ -48,16 +48,16 @@ class V1ContextAsyncReturn(BaseModel):
 
 
 class V1ContextResult(BaseModel):
-    temperature: float = None
+    temperature: float | None = None
     solvent: str = ""
     reagent: str = ""
     catalyst: str = ""
-    solvent_score: float = None
+    solvent_score: float | None = None
     best: bool
     solvent_name_only: str = ""
     reagent_name_only: str = ""
     catalyst_name_only: str = ""
-    score: float = None
+    score: float | None = None
 
 
 class V1ContextResults(RootModel[list[V1ContextResult]]):
