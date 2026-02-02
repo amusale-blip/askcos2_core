@@ -6,7 +6,7 @@ from wrappers.base import BaseResponse, BaseWrapper
 
 class ContextRecommenderFPInput(LowerCamelAliasModel):
     smiles: str
-    reagents: list[str] = None
+    reagents: list[str] | None = None
     n_conditions: int = 10
 
 

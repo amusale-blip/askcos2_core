@@ -7,7 +7,7 @@ from wrappers.base import BaseResponse, BaseWrapper
 
 class CountAnalogsInput(LowerCamelAliasModel):
     reaction_smiles: list[str]
-    reaction_smarts: list[str] = None
+    reaction_smarts: list[str] | None = None
     atom_map_backend: Literal["rxnmapper", "indigo", "wln"] = "rxnmapper"
     min_plausibility: float = 0.1
 
