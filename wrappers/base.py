@@ -18,7 +18,7 @@ class BaseWrapper:
     response_class: type[BaseResponse]
 
     name: str = "base"
-    prefixes: list[str] = None
+    prefixes: list[str] | None = None
     methods_to_bind: dict[str, list[str]] = {
         "get_config": ["GET"],
         "get_doc": ["GET"],

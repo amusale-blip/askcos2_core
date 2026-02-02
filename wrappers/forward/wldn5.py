@@ -24,7 +24,7 @@ class ForwardWLDN5Input(LowerCamelAliasModel):
 
 class ForwardWLDN5Outcome(BaseModel):
     smiles: str
-    template_ids: list = None
+    template_ids: list | None = None
     num_examples: int = 0
 
 
