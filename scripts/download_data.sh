@@ -24,6 +24,13 @@ if [ ! -f ./data/db/buyables/mcule_buyables_fd2.json.gz ]; then
     echo "mcule_buyables_fd2.json.gz Downloaded."
 fi
 
+if [ ! -f ./data/db/buyables/chemspace_buyables_dedup_id_pub.json.gz ]; then
+    echo "./data/db/buyables/chemspace_buyables_dedup_id_pub.json.gz not found. Downloading.."
+    wget -q --show-progress -O data/db/buyables/chemspace_buyables_dedup_id_pub.json.gz \
+      "https://www.dropbox.com/scl/fi/ffwlvve480qmv41omyk6g/chemspace_buyables_dedup_id_pub.json.gz?rlkey=0ke484hgwtjisg8w8k1dewit8&dl=1"
+    echo "chemspace_buyables_dedup_id_pub.json.gz Downloaded."
+fi
+
 mkdir -p ./data/db/historian
 if [ ! -f ./data/db/historian/chemicals.json.gz ]; then
     echo "./data/db/historian/chemicals.json.gz not found. Downloading.."
