@@ -83,7 +83,7 @@ class ModelMetadata(BaseModel):
 
 class ModelReactionProperties(BaseModel):
     canonical_reaction_smiles: str
-    mapped_smiles: str
+    mapped_smiles: str | None = None
     plausibility: float
     reacting_atoms: list[int] | None = None
     selec_error: bool | None = None
