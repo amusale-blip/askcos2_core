@@ -66,8 +66,8 @@ class ExpandOneOptions(LowerCamelAliasModel):
                     "(mostly for template-free suggestions)"
     )
     return_reacting_atoms: bool = Field(
-        default=True,
-        description="whether to return the indices of reacting atoms"
+        default=False,
+        description="passed through for API compatibility; Retro* always calls expand-one with return_reacting_atoms=false"
     )
     selectivity_check: bool = Field(
         default=False,

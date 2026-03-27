@@ -31,7 +31,7 @@ query_template = {
             "classification_threshold": 0.2
         },
         "extract_template": False,
-        "return_reacting_atoms": True,
+        "return_reacting_atoms": False,
         "selectivity_check": False
     },
     "build_tree_options": {
