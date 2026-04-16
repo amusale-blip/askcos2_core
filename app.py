@@ -216,7 +216,7 @@ for tooltip_category, content in TOOLTIPS.items():
         operation_id = OPERATION_IDS.get(operation_key)
         tooltip_router.add_api_route(
             path=path,
-            endpoint=lambda: tooltip_data,
+            endpoint=lambda d=tooltip_data: d,  # magic; DO NOT CHANGE
             methods=["GET"],
             tags=["tooltip", tooltip_category_with_hyphen],
             operation_id=operation_id
