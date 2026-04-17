@@ -198,7 +198,8 @@ module_config = {
             "ports_to_expose": [9761],
             "default_prediction_url": "http://0.0.0.0:9761/fastsolv",
             "custom_prediction_url": "",
-            "timeout": 30,
+            "timeout": 60,
+            "default_query_batch_size": 5,
             "available_model_names": []
         }
     },
@@ -538,7 +539,7 @@ module_config = {
             "default_prediction_url": "http://0.0.0.0:9771/Fusion_Cycle",
             "custom_prediction_url": "",
             "timeout": 60,
-            "default_query_batch_size": 10,
+            "default_query_batch_size": 5,
             "available_model_names": []
         }
     },
