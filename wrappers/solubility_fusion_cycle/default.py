@@ -11,6 +11,10 @@ class SolubilityFusionCycleInput(LowerCamelAliasModel):
     solute_smiles: list[str]
     temperature: list[float]
     density: list | None = None
+    query_batch_size: int | None = Field(
+        default=None,
+        description="query batch size for fusion cycle prediction"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -77,10 +81,25 @@ class SolubilityFusionCycleWrapper(BaseWrapper):
             for i, d in enumerate(input.density):
                 if not d:
                     input.density[i] = 0.0
-        output = self.call_raw(input=input)
-        response = self.convert_output_to_response(output)
 
-        return response
+        query_batch_size = input.query_batch_size
+        if query_batch_size is None:
+            query_batch_size = self.config["deployment"]["default_query_batch_size"]
+
+        results = []
+        for i in range(0, len(input.solute_smiles), query_batch_size):
+            batch_input = SolubilityFusionCycleInput(
+                solvent_smiles=input.solvent_smiles[i:i+query_batch_size],
+                solute_smiles=input.solute_smiles[i:i+query_batch_size],
+                temperature=input.temperature[i:i+query_batch_size],
+                density=input.density[i:i+query_batch_size],
+            )
+            batch_output = self.call_raw(batch_input)
+            batch_response = self.convert_output_to_response(batch_output)
+
+            results.extend(batch_response.root)
+
+        return SolubilityFusionCycleResponse(results)
 
     async def call_async(self, input: SolubilityFusionCycleInput, priority: int = 0) -> str:
         """
