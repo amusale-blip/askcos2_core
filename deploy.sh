@@ -198,6 +198,36 @@ copy-nginx-conf() {
   fi
 }
 
+ensure-https() {
+  if [ "$PROTOCOL" != "https" ]; then
+    echo -e "\033[91m*** ERROR ***\033[00m"
+    echo "Keycloak requires HTTPS protocol."
+    echo "Please set PROTOCOL=https in your .env file and try again."
+    exit 1
+  fi
+}
+
+start-keycloak() {
+  echo "Starting Keycloak services using docker compose up"
+  docker compose -f compose.yaml up -d keycloak-db
+  echo "Waiting for keycloak-db to be healthy..."
+  sleep 10
+  docker compose -f compose.yaml up -d keycloak
+  echo "Keycloak services started."
+}
+
+stop-keycloak() {
+  echo "Stopping Keycloak services"
+  docker compose -f compose.yaml stop keycloak keycloak-db
+  docker compose -f compose.yaml rm -f keycloak keycloak-db
+  echo "Keycloak services stopped."
+}
+
+remove-keycloak-volumes() {
+  docker volume rm "${COMPOSE_PROJECT_NAME}_keycloak_data" "${COMPOSE_PROJECT_NAME}_keycloak_db_data" 2>/dev/null || true
+  echo "Keycloak volumes removed."
+}
+
 set-db-defaults() {
   # Set default values for seeding database if values are not already defined
   BUYABLES=${BUYABLES:-default}
@@ -637,7 +667,8 @@ else
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
       start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
       backup | restore | mongodump | mongorestore | mongodump-result-only | mongodump-user-only | mongorestore-result-only | mongorestore-user-only | \
-      index-db | diff-env | post-update-message | old-messages | get-images | download-db-data)
+      index-db | diff-env | post-update-message | old-messages | get-images | download-db-data | \
+      ensure-https | start-keycloak | stop-keycloak | remove-keycloak-volumes)
         # This is a defined function, so execute it
         $arg
         ;;
@@ -698,6 +729,34 @@ else
         # Stop and remove currently running containers before starting
         stop-services
         start-services
+        ;;
+      deploy-keycloak)
+        # Deploy Keycloak (independent from main deployment)
+        ensure-https
+        copy-nginx-conf
+        diff-env
+        start-keycloak
+        # Restart app container if running so it picks up the new Keycloak public key
+        if docker compose -f compose.yaml ps --status running app --format '{{.Name}}' 2>/dev/null | grep -q .; then
+          echo "Restarting app container to refresh Keycloak public key..."
+          docker compose -f compose.yaml restart app
+        fi
+        ;;
+      clean-keycloak)
+        # Remove Keycloak services and volumes
+        echo "This will stop Keycloak services and remove all Keycloak data volumes."
+        echo "Are you sure you want to continue?"
+        read -rp 'Continue (y/N): ' response
+        case "$response" in
+          [Yy] | [Yy][Ee][Ss])
+            echo "Cleaning Keycloak deployment."
+            stop-keycloak
+            remove-keycloak-volumes
+            ;;
+          *)
+            echo "Doing nothing."
+            ;;
+        esac
         ;;
       *)
         echo "Error: Unsupported command $arg" >&2  # print to stderr
