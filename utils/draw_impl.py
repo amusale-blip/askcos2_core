@@ -11,7 +11,7 @@ from rdkit.Chem import rdAbbreviations, rdChemReactions, rdDepictor, rdFMCS
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry import rdGeometry
 
-from utils.draw_abbreviations import CUSTOM_ABBREVIATIONS
+from utils.draw_abbreviations import CARBON_ABS_LABELS, CUSTOM_ABBREVIATIONS, KETCHER_ABS_LABELS
 
 ABBREVIATIONS = rdAbbreviations.ParseAbbreviations(
     CUSTOM_ABBREVIATIONS
@@ -30,6 +30,7 @@ HIGHLIGHT_COLORS = [
     (222 / 255, 161 / 255, 222 / 255),  # plum-web
     (153 / 255, 200 / 255, 100 / 255),  # pistachio
 ]
+
 
 
 def get_drawer(w, h, svg=True, transparent=True, options=None):
@@ -179,6 +180,183 @@ def align_molecule(mol, ref):
     return mol
 
 
+def get_abs_groups(mol, abs_labels=None):
+    """
+    Atom indices of abstracted groups that apply_atom_labels would relabel.
+    Used to avoid RDKit abbreviations that would cover those atoms.
+    """
+    if not abs_labels:
+        return set()
+    abs_groups = set()
+    for atom in mol.GetAtoms():
+        isotope = atom.GetIsotope()
+        if not isotope:
+            continue
+        atomic_num = atom.GetAtomicNum()
+        sym = Chem.GetPeriodicTable().GetElementSymbol(atomic_num)
+        key_elem = f"{isotope}{sym}"
+        key_iso = str(isotope)
+        if key_elem in abs_labels:
+            abs_groups.add(atom.GetIdx())
+        elif key_iso in abs_labels:
+            abs_groups.add(atom.GetIdx())
+        elif isotope == 1 and atomic_num not in (1, 6):
+            abs_groups.add(atom.GetIdx())
+    return abs_groups
+
+
+def _is_abs_carbonyl(atom, mol):
+    """True if atom is isotope-1 C double-bonded to an isotope-1 O (e.g. ketone [1C]=[1O])."""
+    if atom.GetAtomicNum() != 6 or atom.GetIsotope() != 1:
+        return False
+    idx = atom.GetIdx()
+    for nb in atom.GetNeighbors():
+        if nb.GetAtomicNum() != 8 or nb.GetIsotope() != 1:
+            continue
+        bond = mol.GetBondBetweenAtoms(idx, nb.GetIdx())
+        if bond is not None and bond.GetBondType() == Chem.BondType.DOUBLE:
+            return True
+    return False
+
+
+def condense_abbreviations(
+    mol,
+    abbrevs,
+    abs_labels=None,
+    *,
+    max_coverage=0.4,
+    sanitize=True,
+):
+    """
+    Apply CondenseMolAbbreviations when abs-group labeling is off or would not
+    tag any atom.
+
+    When abs groups are active and some atoms are tagged, find abbreviations
+    with LabelMolAbbreviations, drop SUP substance groups that intersect
+    tagged indices, then CondenseAbbreviationSubstanceGroups so regions like
+    an ethyl prefix can still become Et while [4C] and similar stay explicit.
+    """
+    if not abs_labels:
+        return rdAbbreviations.CondenseMolAbbreviations(
+            mol, abbrevs, maxCoverage=max_coverage, sanitize=sanitize
+        )
+    abs_groups = get_abs_groups(mol, abs_labels)
+    if not abs_groups:
+        return rdAbbreviations.CondenseMolAbbreviations(
+            mol, abbrevs, maxCoverage=max_coverage, sanitize=sanitize
+        )
+    labeled = rdAbbreviations.LabelMolAbbreviations(
+        Chem.Mol(mol), abbrevs, maxCoverage=max_coverage
+    )
+    base = Chem.Mol(mol)
+    added = 0
+    for sg in Chem.GetMolSubstanceGroups(labeled):
+        if not sg.HasProp("TYPE") or sg.GetProp("TYPE") != "SUP":
+            continue
+        if set(sg.GetAtoms()) & abs_groups:
+            continue
+        Chem.AddMolSubstanceGroup(base, sg)
+        added += 1
+    if not added:
+        return base
+    return rdAbbreviations.CondenseAbbreviationSubstanceGroups(base)
+
+
+def apply_atom_labels(mol, options, abs_labels=None):
+    """
+    Override atom labels based on isotope annotations.
+
+    For each atom with a non-zero isotope, applies the first rule that matches:
+    - Explicit map abs_labels: element-specific key "{iso}{symbol}" (e.g.
+      "4C"), else isotope-only key str(isotope) (e.g. "4").
+    - Isotope 1 on any non-H, non-C atom is drawn as "[Y]" where Y is the
+      element symbol (e.g. [1nH] / [1N] -> [N])
+
+    Ketone / carbonyl: a 1C that is double-bonded to 1O is always drawn as
+    "[C]", not the abs_labels value for "1C" (typically "[C-C]" for other
+    abstract single-bond 1C sites).
+
+    Label strings are passed to RDKit's atomLabels and may include markup such
+    as <sup>...</sup> and <sub>...</sub> (e.g. "[C<sup>(+)</sup>]" for
+    bracketed C with a superscript charge).
+
+    Args:
+        mol (Chem.Mol): molecule to process (modified in place)
+        options (MolDrawOptions): drawing options with atomLabels dict
+        abs_labels (dict, optional): mapping from isotope key to label
+    """
+    abs_labels = abs_labels or {}
+    for atom in mol.GetAtoms():
+        isotope = atom.GetIsotope()
+        if not isotope:
+            continue
+        atomic_num = atom.GetAtomicNum()
+        sym = Chem.GetPeriodicTable().GetElementSymbol(atomic_num)
+        key_elem = f"{isotope}{sym}"
+        key_iso = str(isotope)
+        label = None
+        if key_elem in abs_labels:
+            label = abs_labels[key_elem]
+            if key_elem == "1C" and _is_abs_carbonyl(atom, mol):
+                label = "[C]"
+        elif key_iso in abs_labels:
+            label = abs_labels[key_iso]
+        elif isotope == 1 and atomic_num not in (1, 6):
+            label = f"[{sym}]"
+        if label is not None:
+            options.atomLabels[atom.GetIdx()] = label
+            atom.SetIsotope(0)
+
+
+def apply_abs_labels_to_mol(mol):
+    """
+    Strip abs-group isotopes from *mol* in place and return alias text for each
+    affected atom as {0-based atom_idx: alias_str}.
+
+    Mirrors apply_atom_labels / _is_abs_carbonyl but produces plain-text labels
+    suitable for V2000 molfile A-lines (no HTML markup).
+    """
+    aliases = {}
+    for atom in mol.GetAtoms():
+        isotope = atom.GetIsotope()
+        if not isotope:
+            continue
+        atomic_num = atom.GetAtomicNum()
+        if atomic_num == 1:
+            continue
+        sym = Chem.GetPeriodicTable().GetElementSymbol(atomic_num)
+        key_elem = f"{isotope}{sym}"
+        label = None
+        if key_elem in KETCHER_ABS_LABELS:
+            if key_elem == "1C" and _is_abs_carbonyl(atom, mol):
+                label = "[C]"
+            else:
+                label = KETCHER_ABS_LABELS[key_elem]
+        elif isotope == 1 and atomic_num != 6:
+            label = f"[{sym}]"
+        if label is not None:
+            aliases[atom.GetIdx()] = label
+            atom.SetIsotope(0)
+    return aliases
+
+
+def insert_a_lines(molfile, aliases):
+    """Insert V2000 A-line atom aliases into *molfile* before M  END."""
+    if not aliases:
+        return molfile
+    a_lines = []
+    for atom_idx in sorted(aliases):
+        a_lines.append(f"A  {atom_idx + 1:3d}")
+        a_lines.append(aliases[atom_idx])
+    lines = molfile.split("\n")
+    try:
+        end_idx = next(i for i, ln in enumerate(lines) if ln.strip() == "M  END")
+    except StopIteration:
+        return molfile + "\n" + "\n".join(a_lines)
+    lines = lines[:end_idx] + a_lines + lines[end_idx:]
+    return "\n".join(lines)
+
+
 def mol_to_image(
     mol,
     svg=True,
@@ -195,6 +373,7 @@ def mol_to_image(
     highlight_bond_colors=None,
     reference=None,
     options=None,
+    abs_labels=None,
     **kwargs
 ):
     """
@@ -211,7 +390,9 @@ def mol_to_image(
         clear_map (bool, optional): if True, clear atom map before drawing
             (default: True)
         abbreviate (bool, optional): if True, use functional group abbreviations
-            (default: False)
+            (default: False). When abs-group labeling is enabled, abbreviations whose
+            atom sets would overlap a tagged atom are skipped; other abbreviations
+            (e.g. ``Et`` on a remote ethyl) still apply.
         bw_atoms (bool, optional): if True, use black and white atom palette
             (default: True)
         update (bool, optional): if True, run UpdatePropertyCache before drawing
@@ -224,6 +405,9 @@ def mol_to_image(
             colors
         reference (str, optional): reference molecule to align drawing to based on MCS
         options (MolDrawOptions, optional): custom options object
+        abs_labels (dict, optional): overrides/extensions to the built-in carbon
+            abstract map (``CARBON_ABS_LABELS``); caller-supplied ``{}`` still uses
+            those defaults. Isotope 1 on non-H, non-C atoms is drawn as ``[Y]``.
         **kwargs: passed to Draw.PrepareMolForDrawing
 
     Returns:
@@ -235,13 +419,14 @@ def mol_to_image(
         raise ValueError("Need a valid RDKit molecule to draw!")
 
     options = options or get_options()
+    _abs_labels = {**CARBON_ABS_LABELS, **(abs_labels or {})}
 
     if bw_atoms:
         options.useBWAtomPalette()
     if clear_map:
         [a.SetAtomMapNum(0) for a in mol.GetAtoms()]
     if abbreviate and not highlight_atoms and not highlight_bonds and clear_map:
-        mol = rdAbbreviations.CondenseMolAbbreviations(mol, ABBREVIATIONS)
+        mol = condense_abbreviations(mol, ABBREVIATIONS, _abs_labels)
     if update:
         mol.UpdatePropertyCache(False)  # From legacy code, not sure if truly necessary
     if highlight_atoms or not clear_map:
@@ -254,12 +439,14 @@ def mol_to_image(
         try:
             reference = Chem.MolFromSmiles(reference)
             if abbreviate and not highlight_atoms and not highlight_bonds and clear_map:
-                reference = rdAbbreviations.CondenseMolAbbreviations(
-                    reference, ABBREVIATIONS
+                reference = condense_abbreviations(
+                    reference, ABBREVIATIONS, _abs_labels
                 )
             mol = align_molecule(mol, reference)
         except RuntimeError:
             mol = mol_backup
+
+    apply_atom_labels(mol, options, _abs_labels)
 
     mol = Draw.PrepareMolForDrawing(mol, **kwargs)
     options.prepareMolsBeforeDrawing = False  # Already prepared

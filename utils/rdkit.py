@@ -8,7 +8,7 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors, rdDepictor, SDWriter, AllChem
 from typing import Any
 from utils import register_util
-from utils.draw_impl import align_molecule
+from utils.draw_impl import align_molecule, apply_abs_labels_to_mol, insert_a_lines
 from utils.registry import get_util_registry
 from io import StringIO
 from utils.descriptors_util import (
@@ -27,6 +27,7 @@ class SmilesInput(BaseModel):
     smiles: str
     isomericSmiles: bool = True
     reference: str | None = None
+    apply_abs_labels: bool = False
 
 
 class MolfileInput(BaseModel):
@@ -49,6 +50,51 @@ def _canonicalize(_smi: str, isomericSmiles: bool) -> str:
             raise ValueError("Cannot canonicalize smiles with rdkit.")
     return _smi
 
+def _atom_is_abs_group(atom: Chem.Atom) -> bool:
+    """True if isotope marks an abstracted site: C with iso 1–5, or hetero with iso 1."""
+    atomic_num = atom.GetAtomicNum()
+    iso = atom.GetIsotope()
+    if not iso:
+        return False
+    if atomic_num == 6:
+        return 1 <= iso <= 5
+    if atomic_num != 1:
+        return iso == 1
+    return False
+
+
+def has_abs_groups(smiles: str) -> bool:
+    """Return True if *smiles* encodes at least one abstracted-group isotope marker."""
+    mol = Chem.MolFromSmiles(smiles)
+    if not mol:
+        return False
+    return any(_atom_is_abs_group(a) for a in mol.GetAtoms())
+
+
+def _strip_abs_group_isotopes(smiles: str, isomericSmiles: bool = True) -> str:
+    """Clear isotope labels used for abstracted groups; other isotopes are unchanged."""
+    mol = Chem.MolFromSmiles(smiles)
+    if not mol:
+        raise ValueError("Cannot parse smiles with rdkit.")
+    rw = Chem.RWMol(mol)
+    changed = False
+    for atom in rw.GetAtoms():
+        if _atom_is_abs_group(atom):
+            atom.SetIsotope(0)
+            changed = True
+    if not changed:
+        return smiles
+    out = Chem.MolToSmiles(rw, isomericSmiles=isomericSmiles)
+    if not out:
+        raise ValueError("Cannot canonicalize smiles with rdkit.")
+    return out
+
+
+def abs_group_handler(smiles: str, isomericSmiles: bool = True) -> str:
+    """Strip abstracted-group isotope markers from *smiles* (same logic as the rdkit util)."""
+    return _strip_abs_group_isotopes(smiles, isomericSmiles)
+
+
 @register_util(name="rdkit")
 class RDKitUtil:
     """Util class for RDKit"""
@@ -66,6 +112,8 @@ class RDKitUtil:
         "get_num_rings": ["POST"],
         "get_element_counts": ["POST"],
         "get_core_fragment": ["POST"],
+        "has_abs_groups": ["POST"],
+        "abs_group_handler": ["POST"],
     }
 
     def __init__(self, util_config: dict[str, Any] | None = None):
@@ -218,6 +266,8 @@ class RDKitUtil:
         else:
             rdDepictor.Compute2DCoords(mol)
 
+        aliases = apply_abs_labels_to_mol(mol) if input.apply_abs_labels else {}
+
         try:
             molfile = Chem.MolToMolBlock(mol)
         except Exception:
@@ -228,6 +278,9 @@ class RDKitUtil:
                 status_code=500,
                 media_type="application/json"
             )
+
+        if aliases:
+            molfile = insert_a_lines(molfile, aliases)
 
         resp["molfile"] = molfile
 
@@ -448,6 +501,56 @@ class RDKitUtil:
                 status_code=200,
                 media_type="application/json"
             )
-            
+
+    @staticmethod
+    def has_abs_groups(input: SmilesInput) -> Response:
+        smiles = input.smiles
+
+        resp = {}
+        try:
+            resp["has_abs_groups"] = has_abs_groups(smiles)
+        except Exception:
+            resp["error"] = (
+                f"Unable to check abstracted groups using RDKit, traceback: "
+                f"{tb.format_exc()}"
+            )
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
+
+    @staticmethod
+    def abs_group_handler(input: SmilesInput) -> Response:
+        smiles = input.smiles
+        isomeric_smiles = input.isomericSmiles
+
+        resp = {}
+        try:
+            resp["smiles"] = _strip_abs_group_isotopes(
+                smiles, isomericSmiles=isomeric_smiles
+            )
+        except Exception:
+            resp["error"] = (
+                f"Unable to apply abstracted-group handler using RDKit, traceback: "
+                f"{tb.format_exc()}"
+            )
+            return Response(
+                content=json.dumps(resp),
+                status_code=500,
+                media_type="application/json"
+            )
+        else:
+            return Response(
+                content=json.dumps(resp),
+                status_code=200,
+                media_type="application/json"
+            )
 
 
