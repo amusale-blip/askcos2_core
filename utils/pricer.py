@@ -1068,12 +1068,6 @@ class MongoPricer:
         start = time.time()
         n_new_tests = 0
         for pos in range(total):
-            if pos % 1000 == 0 and pos > 0:
-                print(
-                    f"substructure match (cnt={pos}/{total})",
-                    time.time() - start,
-                    "seconds",
-                )
             idx = int(filtered_indices[pos])
             if idx in entry["matched_set"]:
                 results.append(_make_result(idx))
