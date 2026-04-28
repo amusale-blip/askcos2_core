@@ -20,8 +20,6 @@ services:
     restart: always
     env_file:
       - .env
-    environment:
-      - BUYABLES_CACHE_DIR=/ASKCOSv2/askcos2_core/data/db/buyables
     network_mode: host
     volumes:
       - "askcosv2_precompute:/ASKCOSv2/askcos2_core/data/precompute"
@@ -82,8 +80,6 @@ services:
     restart: always
     env_file:
       - .env
-    environment:
-      - BUYABLES_CACHE_DIR=/ASKCOSv2/askcos2_core/data/db/buyables
     network_mode: host
     volumes:
       - "askcosv2_precompute:/ASKCOSv2/askcos2_core/data/precompute"
