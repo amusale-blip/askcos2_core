@@ -302,6 +302,12 @@ count-mongo-docs() {
   echo "Sites ref collection:         $(run-mongo-js "db.sites_refs.estimatedDocumentCount({})" | tr -d '\r') / 123 expected (default)"
 }
 
+drop-older-chemspace-buyables() {
+  echo "Dropping older Chemspace buyables..."
+  run-mongo-js 'db.buyables.deleteMany({ "source": "CS" })'
+  echo "Dropping complete."
+}
+
 seed-db() {
   if [ -z "$BUYABLES" ] && [ -z "$CHEMICALS" ] && [ -z "$REACTIONS" ] && [ -z "$RETRO_TEMPLATES" ] && [ -z "$FORWARD_TEMPLATES" ] && [ -z "$REFERENCES" ]; then
     echo "Nothing to seed!"
@@ -331,7 +337,7 @@ seed-db() {
     buyables_file="${DATA_DIR}/buyables/chembridge_buyables.json.gz"
     DB_DROP="" mongoimport_upsert buyables "$buyables_file"
 
-    buyables_file="${DATA_DIR}/buyables/chemspace_buyables_dedup_id_pub.json.gz"
+    buyables_file="${DATA_DIR}/buyables/chemspace_buyables_2026Apr.json.gz"
     DB_DROP="" mongoimport_upsert buyables "$buyables_file"
 
     buyables_file="${DATA_DIR}/buyables/buyables.json.gz"
@@ -667,7 +673,7 @@ else
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
       start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
       backup | restore | mongodump | mongorestore | mongodump-result-only | mongodump-user-only | mongorestore-result-only | mongorestore-user-only | \
-      index-db | diff-env | post-update-message | old-messages | get-images | download-db-data | \
+      index-db | drop-older-chemspace-buyables | diff-env | post-update-message | old-messages | get-images | download-db-data | \
       ensure-https | start-keycloak | stop-keycloak | remove-keycloak-volumes)
         # This is a defined function, so execute it
         $arg
