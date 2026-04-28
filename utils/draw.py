@@ -9,6 +9,7 @@ from utils.draw_impl import (
     reaction_smiles_to_image,
     template_smarts_to_image
 )
+from utils.draw_abbreviations import CARBON_ABS_LABELS
 from utils.image_annotation import generate_annotated_image
 
 
@@ -27,6 +28,8 @@ class DrawerInput(LowerCamelAliasModel):
     as_reactant: int = 0
     as_product: int = 0
     size: float | None = None
+    # default_factory breaks FastAPI Depends(DrawerInput): signature default is <factory>
+    abs_labels: dict[str, str] | None = None
 
 
 @register_util(name="draw")
@@ -64,6 +67,12 @@ class Drawer:
     - `as_product` (int, optional): molecule popularity in training data as a
             product for annotation
     - `size` (float, optional): size of drawing
+    - `abs_labels` (dict, optional): map isotope keys (e.g. `4C`) to display
+            labels; RDKit supports `<sup>` / `<sub>` in label text (e.g.
+            `[C<sup>(+)</sup>]`)
+    - When `abbreviate` is True, RDKit abbreviations whose atom sets would overlap
+            an abs-group–tagged atom are skipped; other abbreviations on the same
+            structure still apply.
 
     Returns: SVG or PNG image of input SMILES
     """
@@ -89,13 +98,16 @@ class Drawer:
 
     @staticmethod
     def post(data: DrawerInput) -> Response:
-        return draw(data.model_dump())
+        return draw(data.dict())
 
 
 def draw(data: dict) -> Response:
     """
     Return HttpResponse with PNG of requested structure.
     """
+    if data.get("abs_labels") is None:
+        data = {**data, "abs_labels": dict(CARBON_ABS_LABELS)}
+
     input_type = data.get("input_type")
 
     if input_type == "chemical" or ">" not in data.get("smiles"):
@@ -138,9 +150,10 @@ def draw_chemical(data: dict) -> Response:
     svg = data.get("svg")
     transparent = data.get("transparent")
     highlight = data.get("highlight")
-    reacting_atoms = data.get("reacting_atoms", [])
+    reacting_atoms = data.get("reacting_atoms") or []
     reference = data.get("reference")
     annotate = data.get("annotate")
+    abs_labels = data.get("abs_labels")
 
     media_type = "image/svg+xml" if svg else "image/png"
     if annotate:
@@ -154,7 +167,8 @@ def draw_chemical(data: dict) -> Response:
             transparent=transparent,
             highlight=highlight,
             reacting_atoms=reacting_atoms,
-            reference=reference
+            reference=reference,
+            abs_labels=abs_labels
         )
     else:
         content = molecule_smiles_to_image(
@@ -163,7 +177,8 @@ def draw_chemical(data: dict) -> Response:
             transparent=transparent,
             highlight=highlight,
             reacting_atoms=reacting_atoms,
-            reference=reference
+            reference=reference,
+            abs_labels=abs_labels
         )
     response = Response(content=content, media_type=media_type)
 
@@ -177,9 +192,15 @@ def draw_template(data: dict) -> Response:
     smiles = data.get("smiles")
     svg = data.get("svg")
     transparent = data.get("transparent")
+    abs_labels = data.get("abs_labels")
 
     media_type = "image/svg+xml" if svg else "image/png"
-    content = template_smarts_to_image(smiles, svg=svg, transparent=transparent)
+    content = template_smarts_to_image(
+        smiles,
+        svg=svg,
+        transparent=transparent,
+        abs_labels=abs_labels,
+    )
     response = Response(content=content, media_type=media_type)
 
     return response
@@ -195,6 +216,7 @@ def draw_reaction(data: dict) -> Response:
     highlight = data.get("highlight")
     clear_map = not data.get("draw_map")
     align = data.get("align")
+    abs_labels = data.get("abs_labels")
 
     media_type = "image/svg+xml" if svg else "image/png"
     content = reaction_smiles_to_image(
@@ -203,7 +225,8 @@ def draw_reaction(data: dict) -> Response:
         transparent=transparent,
         highlight=highlight,
         clear_map=clear_map,
-        align=align
+        align=align,
+        abs_labels=abs_labels,
     )
 
     response = Response(content=content, media_type=media_type)

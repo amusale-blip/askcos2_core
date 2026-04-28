@@ -20,9 +20,12 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - BUYABLES_CACHE_DIR=/ASKCOSv2/askcos2_core/data/db/buyables
     network_mode: host
     volumes:
       - "askcosv2_precompute:/ASKCOSv2/askcos2_core/data/precompute"
+      - "askcosv2_buyables_cache:/ASKCOSv2/askcos2_core/data/db/buyables"
       - "./data/db:/usr/local/askcos-data/db"
     depends_on:
       - mongo
@@ -79,9 +82,12 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - BUYABLES_CACHE_DIR=/ASKCOSv2/askcos2_core/data/db/buyables
     network_mode: host
     volumes:
       - "askcosv2_precompute:/ASKCOSv2/askcos2_core/data/precompute"
+      - "askcosv2_buyables_cache:/ASKCOSv2/askcos2_core/data/db/buyables"
     depends_on:
       - rabbitmq
       - redis
@@ -138,5 +144,6 @@ volumes:
   askcosv2_redisdata:
   askcosv2_mongo_data:
   askcosv2_precompute:
+  askcosv2_buyables_cache:
   keycloak_data:
   keycloak_db_data:
