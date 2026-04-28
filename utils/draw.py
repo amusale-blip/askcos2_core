@@ -98,7 +98,7 @@ class Drawer:
 
     @staticmethod
     def post(data: DrawerInput) -> Response:
-        return draw(data.dict())
+        return draw(data.model_dump())
 
 
 def draw(data: dict) -> Response:

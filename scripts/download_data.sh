@@ -6,7 +6,7 @@ mkdir -p ./data/db/buyables
 if [ ! -f ./data/db/buyables/buyables.json.gz ]; then
     echo "./data/db/buyables/buyables.json.gz not found. Downloading.."
     wget -q --show-progress -O data/db/buyables/buyables.json.gz \
-      "https://www.dropbox.com/scl/fi/jaqo5r8jji7n19ijrohj1/buyables_ori_prop_new2.json.gz?rlkey=lnbcj7t1ygrjgqi3g7a7vshz2&st=krp61fnf&dl=0"
+      "https://www.dropbox.com/scl/fi/jaqo5r8jji7n19ijrohj1/buyables_ori_prop_new2.json.gz?rlkey=lnbcj7t1ygrjgqi3g7a7vshz2&st=krp61fnf&dl=1"
     echo "buyables.json.gz Downloaded."
 fi
 
@@ -24,11 +24,11 @@ if [ ! -f ./data/db/buyables/mcule_buyables_fd2.json.gz ]; then
     echo "mcule_buyables_fd2.json.gz Downloaded."
 fi
 
-if [ ! -f ./data/db/buyables/chemspace_buyables_dedup_id_pub.json.gz ]; then
-    echo "./data/db/buyables/chemspace_buyables_dedup_id_pub.json.gz not found. Downloading.."
-    wget -q --show-progress -O data/db/buyables/chemspace_buyables_dedup_id_pub.json.gz \
-      "https://www.dropbox.com/scl/fi/ffwlvve480qmv41omyk6g/chemspace_buyables_dedup_id_pub.json.gz?rlkey=0ke484hgwtjisg8w8k1dewit8&dl=1"
-    echo "chemspace_buyables_dedup_id_pub.json.gz Downloaded."
+if [ ! -f ./data/db/buyables/chemspace_buyables_2026Apr.json.gz ]; then
+    echo "./data/db/buyables/chemspace_buyables_2026Apr.json.gz not found. Downloading.."
+    wget -q --show-progress -O data/db/buyables/chemspace_buyables_2026Apr.json.gz \
+      "https://www.dropbox.com/scl/fi/iau2q04rt7woiof70up5e/chemspace_buyables_2026Apr.json.gz?rlkey=jcrzv1s3o2dpfrtdzljlm0ngz&st=8rhguy74&dl=1"
+    echo "chemspace_buyables_2026Apr.json.gz Downloaded."
 fi
 
 mkdir -p ./data/db/historian

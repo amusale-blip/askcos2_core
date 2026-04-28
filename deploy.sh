@@ -294,12 +294,29 @@ index-db() {
 }
 
 count-mongo-docs() {
-  echo "Buyables collection:          $(run-mongo-js "db.buyables.estimatedDocumentCount({})" | tr -d '\r') / 686495 expected (default)"
+  echo "Buyables collection:          $(run-mongo-js "db.buyables.estimatedDocumentCount({})" | tr -d '\r') / 732231 expected (default)"
   echo "Chemicals collection:         $(run-mongo-js "db.chemicals.estimatedDocumentCount({})" | tr -d '\r') / 19188359 expected (default)"
   echo "Reactions collection:         $(run-mongo-js "db.reactions.estimatedDocumentCount({})" | tr -d '\r') / 3052316 expected (default, 7072474 including cas)"
   echo "Retro template collection:    $(run-mongo-js "db.retro_templates.estimatedDocumentCount({})" | tr -d '\r') / 432538 expected (default, 612013 including cas)"
   echo "Forward template collection:  $(run-mongo-js "db.forward_templates.estimatedDocumentCount({})" | tr -d '\r') / 17089 expected (default)"
   echo "Sites ref collection:         $(run-mongo-js "db.sites_refs.estimatedDocumentCount({})" | tr -d '\r') / 123 expected (default)"
+}
+
+drop-older-chemspace-buyables() {
+  echo "Starting the mongo container for dropping older Chemspace buyables..."
+  docker compose -f compose.yaml up -d mongo precompute
+  sleep 3
+
+  count-mongo-docs
+
+  echo "Dropping older Chemspace buyables..."
+  run-mongo-js 'db.buyables.deleteMany({ "source": "CS" })'
+  echo "Dropping complete."
+
+  count-mongo-docs
+
+  docker compose -f compose.yaml rm -sf mongo precompute
+  echo
 }
 
 seed-db() {
@@ -331,7 +348,7 @@ seed-db() {
     buyables_file="${DATA_DIR}/buyables/chembridge_buyables.json.gz"
     DB_DROP="" mongoimport_upsert buyables "$buyables_file"
 
-    buyables_file="${DATA_DIR}/buyables/chemspace_buyables_dedup_id_pub.json.gz"
+    buyables_file="${DATA_DIR}/buyables/chemspace_buyables_2026Apr.json.gz"
     DB_DROP="" mongoimport_upsert buyables "$buyables_file"
 
     buyables_file="${DATA_DIR}/buyables/buyables.json.gz"
@@ -667,7 +684,7 @@ else
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
       start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
       backup | restore | mongodump | mongorestore | mongodump-result-only | mongodump-user-only | mongorestore-result-only | mongorestore-user-only | \
-      index-db | diff-env | post-update-message | old-messages | get-images | download-db-data | \
+      index-db | drop-older-chemspace-buyables | diff-env | post-update-message | old-messages | get-images | download-db-data | \
       ensure-https | start-keycloak | stop-keycloak | remove-keycloak-volumes)
         # This is a defined function, so execute it
         $arg
