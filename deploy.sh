@@ -715,6 +715,7 @@ else
         diff-env
         generate-deployment-scripts
         get-images
+        download-db-data
         start-services
         post-update-message
         ;;
