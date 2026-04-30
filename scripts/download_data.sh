@@ -146,3 +146,10 @@ if [ ! -f ./data/db/templates/retro.templates.reaxys.json.gz ]; then
       "https://www.dropbox.com/scl/fi/31hc3r6w1atwqqrh2mfm1/retro.templates.reaxys.json.gz?rlkey=w8dgkympjlcll51299k6nbv12&dl=1"
     echo "retro.templates.reaxys.json.gz Downloaded."
 fi
+
+if [ ! -f ./data/db/templates/retro.templates.uspto_higher_level.json.gz ]; then
+    echo "./data/db/templates/retro.templates.uspto_higher_level.json.gz not found. Downloading.."
+    wget -q --show-progress -O data/db/templates/retro.templates.uspto_higher_level.json.gz \
+      "https://www.dropbox.com/scl/fi/n5bjft6tln7t6or9mf44s/retro.templates.uspto_higher_level.json.gz?rlkey=6tvypzqa1kk72bgtmp25tguub&st=8611y73e&dl=1"
+    echo "retro.templates.uspto_higher_level.json.gz Downloaded."
+fi
