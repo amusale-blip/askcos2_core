@@ -53,6 +53,13 @@ if [ ! -f ./data/db/historian/historian.pistachio.json.gz ]; then
     echo "historian.pistachio.json.gz Downloaded."
 fi
 
+if [ ! -f ./data/db/historian/historian.uspto_higher_level.json.gz ]; then
+    echo "./data/db/historian/historian.uspto_higher_level.json.gz not found. Downloading.."
+    wget -q --show-progress -O data/db/historian/historian.uspto_higher_level.json.gz \
+      "https://www.dropbox.com/scl/fi/zkjcmhanhwwkzr8bmucv9/historian.uspto_higher_level.json.gz?rlkey=882kdr573rfbw8t9orr12iqop&st=licazbst&dl=1"
+    echo "historian.uspto_higher_level.json.gz Downloaded."
+fi
+
 if [ ! -f ./data/db/historian/reactions.bkms_metabolic.json.gz ]; then
     echo "./data/db/historian/reactions.bkms_metabolic.json.gz not found. Downloading.."
     wget -q --show-progress -O data/db/historian/reactions.bkms_metabolic.json.gz \
@@ -83,6 +90,13 @@ if [ ! -f ./data/db/historian/reactions.USPTO_FULL.json.gz ]; then
     wget -q --show-progress -O data/db/historian/reactions.USPTO_FULL.json.gz \
       "https://www.dropbox.com/scl/fi/19h8ip139l2o1dyu95uog/reactions.USPTO_FULL.json.gz?rlkey=6lyepgx5oiei0gct6i5miuyuy&dl=1"
     echo "reactions.USPTO_FULL.json.gz Downloaded."
+fi
+
+if [ ! -f ./data/db/historian/reactions.uspto_higher_level.json.gz ]; then
+    echo "./data/db/historian/reactions.uspto_higher_level.json.gz not found. Downloading.."
+    wget -q --show-progress -O data/db/historian/reactions.uspto_higher_level.json.gz \
+      "https://www.dropbox.com/scl/fi/1r4viq2ptfb8fnedv75xv/reactions.uspto_higher_level.json.gz?rlkey=z6b3pvyxw7jzchbyagtdb0ts7&st=8fhqms4r&dl=1"
+    echo "reactions.uspto_higher_level.json.gz Downloaded."
 fi
 
 mkdir -p ./data/db/references
