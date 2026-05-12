@@ -708,7 +708,6 @@ class MongoPricer:
             print("Saving buyables to disk")
             np.save(paths["features"], self.buyable_features)
             self.buyable_pfpbits = np.packbits(self.buyable_pfpbits, axis=1)
-            del self.buyable_pfpbits
             np.save(paths["pfpbits"], self.buyable_pfpbits)
             with gzip.open(paths["buyables"], "wt") as f:
                 for buyable in self.buyables:
