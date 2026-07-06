@@ -244,6 +244,21 @@ run-mongo-js() {
     bash -c 'mongosh --username ${MONGO_USER} --password ${MONGO_PW} --authenticationDatabase admin ${MONGO_HOST}/askcos --quiet --eval '"'$1'"
 }
 
+run-single-mongo-command() {
+  echo "Starting the mongo container for running custom command..."
+
+  docker compose -f compose.yaml up -d mongo
+  sleep 3
+
+  # arg 1 is js command
+  docker compose -f compose.yaml exec -T mongo \
+    bash -c 'mongosh --username ${MONGO_USER} --password ${MONGO_PW} --authenticationDatabase admin ${MONGO_HOST}/askcos --quiet --eval '"'$1'"
+
+  docker compose -f compose.yaml rm -sf mongo
+
+  echo "Done."
+}
+
 mongoimport() {
   # arg 1 is collection name
   # arg 2 is file path
@@ -682,7 +697,7 @@ else
   do
     case "$arg" in
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
-      start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
+      start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | run-single-mongo-command | \
       backup | restore | mongodump | mongorestore | mongodump-result-only | mongodump-user-only | mongorestore-result-only | mongorestore-user-only | \
       index-db | drop-older-chemspace-buyables | diff-env | post-update-message | old-messages | get-images | download-db-data | \
       ensure-https | start-keycloak | stop-keycloak | remove-keycloak-volumes)
