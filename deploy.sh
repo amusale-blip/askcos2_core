@@ -33,7 +33,7 @@ LOCAL=false
 BACKUP_DIR=""
 IGNORE_DIFF=false
 
-COMMANDS=""
+COMMANDS=()
 while (( "$#" )); do
   case "$1" in
     -h|--help|help)
@@ -113,14 +113,14 @@ while (( "$#" )); do
       exit 1
       ;;
     *) # preserve positional arguments
-      COMMANDS="$COMMANDS $1"
+      COMMANDS+=("$1")
       shift
       ;;
   esac
 done
 
 # Set positional arguments in their proper place
-eval set -- "$COMMANDS"
+set -- "${COMMANDS[@]}"
 
 # Export variables needed by docker compose
 export VERSION_NUMBER
@@ -250,9 +250,10 @@ run-single-mongo-command() {
   docker compose -f compose.yaml up -d mongo
   sleep 3
 
-  # arg 1 is js command
+  # arg 1 is the db name
+  # arg 2 is the js command
   docker compose -f compose.yaml exec -T mongo \
-    bash -c 'mongosh --username ${MONGO_USER} --password ${MONGO_PW} --authenticationDatabase admin ${MONGO_HOST}/askcos --quiet --eval '"'$1'"
+    bash -c 'mongosh --username ${MONGO_USER} --password ${MONGO_PW} --authenticationDatabase admin ${MONGO_HOST}/'"$1"' --quiet --eval '"'$2'"
 
   docker compose -f compose.yaml rm -sf mongo
 
@@ -697,12 +698,24 @@ else
   do
     case "$arg" in
       clean-data | start-db-services | save-db | seed-db | copy-nginx-conf | pull-images | generate-deployment-scripts | \
-      start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | run-single-mongo-command | \
+      start-web-services | start-ml-servers | start-celery-workers | set-db-defaults | count-mongo-docs | \
       backup | restore | mongodump | mongorestore | mongodump-result-only | mongodump-user-only | mongorestore-result-only | mongorestore-user-only | \
       index-db | drop-older-chemspace-buyables | diff-env | post-update-message | old-messages | get-images | download-db-data | \
       ensure-https | start-keycloak | stop-keycloak | remove-keycloak-volumes)
         # This is a defined function, so execute it
         $arg
+        ;;
+      run-single-mongo-command)
+        # This command takes a db name in $2 and the mongo/js command string
+        # in $3, so they must be forwarded explicitly. Stop iterating afterwards
+        # so the arguments are not treated as other (unsupported) commands.
+        if [ $# -lt 3 ]; then
+          echo "Error: run-single-mongo-command requires a db name and a command string, e.g." >&2
+          echo "  bash deploy.sh run-single-mongo-command \"askcos\" \"db.results.drop()\"" >&2
+          exit 1;
+        fi
+        run-single-mongo-command "$2" "$3"
+        break
         ;;
       pre-deploy)
         copy-nginx-conf
