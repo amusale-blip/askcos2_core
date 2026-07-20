@@ -84,9 +84,9 @@ class RetroOnmtMolTransWrapper(BaseWrapper):
         use_vertex = self.config["deployment"].get("use_vertex_ai", False)
 
         if use_vertex:
-            endpoint_id = self.config["deployment"]["vertex_endpoint_id"]
-            region = self.config["deployment"].get("vertex_location", "us-central1")
-            project = self.config["deployment"].get("vertex_project", "x-woodward")
+            endpoint_id = os.environ.get("VERTEX_ENDPOINT_ID", self.config["deployment"]["vertex_endpoint_id"])
+            region = os.environ.get("VERTEX_LOCATION", self.config["deployment"].get("vertex_location", "us-central1"))
+            project = os.environ.get("VERTEX_PROJECT", self.config["deployment"].get("vertex_project", "x-woodward"))
 
             payload = {
                 "instances": [

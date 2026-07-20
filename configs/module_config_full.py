@@ -393,15 +393,15 @@ module_config = {
         "description": "One-step retrosynthesis model using the sequence-to-sequence Molecular Transformer (onmt_MolTrans) across Vertex AI",
         "deployment": {
             "deployment_config": "deployment.yaml",
-            "use_vertex_ai": True,
-            "vertex_project": "x-woodward",
-            "vertex_location": "us-central1",
-            "vertex_endpoint_id": "2804467684119412736",
+            "use_vertex_ai": os.environ.get("USE_VERTEX_AI", "True").lower() in ("true", "1"),
+            "vertex_project": os.environ.get("VERTEX_PROJECT", "x-woodward"),
+            "vertex_location": os.environ.get("VERTEX_LOCATION", "us-central1"),
+            "vertex_endpoint_id": os.environ.get("VERTEX_ENDPOINT_ID", "2804467684119412736"),
             "use_gpu": False,
             "ports_to_expose": [8080],
-            "default_prediction_url": "https://us-central1-prediction-aiplatform.mtls.googleapis.com",
+            "default_prediction_url": os.environ.get("PREDICTION_URL", "https://us-central1-prediction-aiplatform.mtls.googleapis.com"),
             "custom_prediction_url": "",
-            "timeout": 360,
+            "timeout": int(os.environ.get("PREDICTION_TIMEOUT", "360")),
             "available_model_names": [
                 "onmt-moltrans-service-model"
             ]

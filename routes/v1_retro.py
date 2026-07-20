@@ -188,16 +188,17 @@ async def get_plan_status(job_id: str):
     Polls the background job and returns resolved pathways once complete.
     """
     try:
+        poll_timeout = float(os.environ.get("POLL_TIMEOUT_SECONDS", "1.0"))
         result = AsyncResult(job_id)
         state = await asyncio.wait_for(
             asyncio.to_thread(lambda: result.state),
-            timeout=1.0
+            timeout=poll_timeout
         )
 
         if state == "SUCCESS":
             res_data = await asyncio.wait_for(
                 asyncio.to_thread(lambda: result.result),
-                timeout=1.0
+                timeout=poll_timeout
             )
             return {
                 "status_code": 200,
