@@ -21,6 +21,7 @@ module_config = {
         "qm_descriptors": True,
         "reaction_classification": True,
         "retro_augmented_transformer": True,
+        "retro_onmt_moltrans": True,
         "retro_exact_match": True,
         "retro_graph2smiles": True,
         "retro_retrosim": True,
@@ -383,6 +384,26 @@ module_config = {
             "available_model_names": [
                 "pistachio_23Q3",
                 "USPTO_FULL"
+            ]
+        }
+    },
+
+    "retro_onmt_moltrans": {
+        "repo": "git@github.com:theteamatx/x-woodward-investigations.git",
+        "description": "One-step retrosynthesis model using the sequence-to-sequence Molecular Transformer (onmt_MolTrans) across Vertex AI",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_vertex_ai": True,
+            "vertex_project": "x-woodward",
+            "vertex_location": "us-central1",
+            "vertex_endpoint_id": "2804467684119412736",
+            "use_gpu": False,
+            "ports_to_expose": [8080],
+            "default_prediction_url": "https://us-central1-prediction-aiplatform.mtls.googleapis.com",
+            "custom_prediction_url": "",
+            "timeout": 360,
+            "available_model_names": [
+                "onmt-moltrans-service-model"
             ]
         }
     },

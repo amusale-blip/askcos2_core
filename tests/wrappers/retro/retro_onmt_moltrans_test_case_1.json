@@ -1,0 +1,7 @@
+{
+  "smiles": [
+    "CC(=O)OCC"
+  ],
+  "model_name": "onmt-moltrans-service-model",
+  "n_best": 3
+}

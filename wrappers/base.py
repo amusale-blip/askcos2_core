@@ -1,3 +1,4 @@
+import asyncio
 import requests
 from celery.result import AsyncResult
 from configs import db_config
@@ -95,15 +96,20 @@ class BaseWrapper:
 
     async def call_async(self, input: BaseModel, priority: int = 0) -> str:
         from askcos2_celery.tasks import base_task
-        async_result = base_task.apply_async(
-            args=(self.name, input.model_dump()), priority=priority)
+        async_result = await asyncio.to_thread(
+            base_task.apply_async,
+            args=(self.name, input.model_dump()),
+            priority=priority
+        )
         task_id = async_result.id
 
         return task_id
 
     async def retrieve(self, task_id: str) -> BaseResponse | None:
         result = AsyncResult(task_id)
-        response = result.result
+        response = await asyncio.to_thread(lambda: result.result)
+        if response is None:
+            return None
         response = self.response_class(**response)
 
         return response

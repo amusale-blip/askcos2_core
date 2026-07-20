@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi_mcp import FastApiMCP
 from fastapi.middleware.cors import CORSMiddleware
+from routes.v1_retro import router as v1_retro_router
 from tooltips import TOOLTIPS
 from typing import Any, Callable
 from utils import oauth2
@@ -111,6 +112,7 @@ router.add_api_route(
     operation_id=OPERATION_IDS.get(("/api/admin/logout", "POST"))
 )
 app.include_router(router)
+app.include_router(v1_retro_router)
 
 for wrapper in wrapper_registry:
     for i, prefix in enumerate(wrapper.prefixes):

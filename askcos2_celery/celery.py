@@ -34,7 +34,7 @@ READABLE_NAMES = {
 }
 
 # Note: cannot use guest for authenticating with broker unless on localhost
-redis_host = os.environ.get("REDIS_HOST", "0.0.0.0")
+redis_host = os.environ.get("REDIS_HOST", "127.0.0.1")
 redis_port = os.environ.get("REDIS_PORT", "6379")
 redis_password = os.environ.get("REDIS_PASSWORD", "")
 if redis_password:
@@ -45,7 +45,7 @@ redis_url = "redis://{password}{host}:{port}".format(
     port=redis_port,
 )
 
-rabbit_host = os.environ.get("RABBITMQ_HOST", "0.0.0.0")
+rabbit_host = os.environ.get("RABBITMQ_HOST", "127.0.0.1")
 rabbit_port = os.environ.get("RABBITMQ_PORT", "5672")
 rabbit_username = os.environ.get("RABBITMQ_USERNAME", "guest")
 rabbit_password = os.environ.get("RABBITMQ_PASSWORD", "guest")
