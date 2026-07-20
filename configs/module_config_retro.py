@@ -1,3 +1,5 @@
+import os
+
 module_config = {
     "modules_to_start": {
         "atom_map_indigo": True,

@@ -161,13 +161,15 @@ class RetroOnmtMolTransWrapper(BaseWrapper):
         Endpoint for asynchronous call to one-step retrosynthesis based on
         Sequence-to-Sequence Molecular Transformer without blocking the async event loop.
         """
+        import uuid
         from askcos2_celery.tasks import retro_task
-        async_result = await asyncio.to_thread(
+        task_id = str(uuid.uuid4())
+        await asyncio.to_thread(
             retro_task.apply_async,
             args=(self.name, input.model_dump()),
+            task_id=task_id,
             priority=priority
         )
-        task_id = async_result.id
         return task_id
 
     async def retrieve(self, task_id: str) -> RetroOnmtMolTransResponse | None:

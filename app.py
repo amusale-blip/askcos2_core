@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import uvicorn
 from adapters.registry import get_adapter_registry
 from configs.mcp_config import INCLUDE_OPERATIONS, OPERATION_IDS
