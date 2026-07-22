@@ -105,7 +105,22 @@ CHANGE 7: Automated Integration Test Harnesses
    - *Sample Output (HTTP 200 OK):*
      `{"status_code":200,"job_id":"b5512bdb-9d95-43ec-a348-64a64d169d80","complete":false,"failed":false,"status":"PENDING"}`
 
+--------------------------------------------------------------------------------
+CHANGE 8: Custom `RetroChimera` Prediction Wrapper Integration
+--------------------------------------------------------------------------------
+- **File Created:** `wrappers/retro/retrochimera.py`
+- **What Was Changed:** Built `RetroChimeraWrapper` subclassing `BaseWrapper` with `prefixes = ["retro/retrochimera"]`, Pydantic validation schemas (`RetroChimeraInput`, `RetroChimeraResult`, `RetroChimeraResponse`), and `call_raw()`, `call_sync()`, `call_async()` implementations.
+- **Why It Was Done:** Extends gateway model-agnosticism to support our proprietary RetroChimera model across Google Cloud Vertex AI (with mTLS/CBA transport via `gcloud ai endpoints predict`) or local HTTP Docker containers. Added `RETROCHIMERA_VERTEX_ENDPOINT_ID` environment variables and 360-second timeouts to support scale-to-zero cold boots without dropping client socket connections.
+
+--------------------------------------------------------------------------------
+CHANGE 9: RetroChimera Module Registration & Automated Tests
+--------------------------------------------------------------------------------
+- **Files Modified:** `configs/module_config_full.py`, `configs/module_config_retro.py`, `tests/routes/test_v1_retro.py`
+- **Files Created:** `tests/wrappers/retro/retro_retrochimera_test.py`, `tests/wrappers/retro/retro_retrochimera_test_case_1.json`
+- **What Was Changed:** Added `"retro_retrochimera": True` to module registries, configured default timeouts and endpoints, and added automated regression test suites for both low-level synchronous calls and high-level v1 endpoints (`/api/v1/retro/expand-one` and `/api/v1/retro/plan`).
+
 ================================================================================
 4. CONCLUSION
 ================================================================================
-All changes implemented in `askcos2_core` preserve full backwards compatibility while establishing a robust, model-agnostic microservice gateway. The system seamlessly translates high-level REST queries into secure mTLS calls against our scale-to-zero Vertex AI deep learning infrastructure.
+All changes implemented in `askcos2_core` preserve full backwards compatibility while establishing a robust, model-agnostic microservice gateway. The system seamlessly translates high-level REST queries into secure mTLS calls against our scale-to-zero Vertex AI deep learning infrastructure across both `onmt_MolTrans` and `RetroChimera` models.
+

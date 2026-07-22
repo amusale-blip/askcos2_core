@@ -1,0 +1,7 @@
+{
+  "smiles": [
+    "CC(=O)OCC"
+  ],
+  "model_name": "retrochimera-service-model",
+  "n_best": 3
+}

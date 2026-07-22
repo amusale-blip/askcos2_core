@@ -1,4 +1,5 @@
 import asyncio
+import os
 from celery.result import AsyncResult
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
@@ -164,14 +165,17 @@ async def plan_pathway(request: PlanRequest) -> PlanResponse:
         target_model = f"retro_{target_model}"
 
     wrapper = registry.get_wrapper(target_model)
-    job_id = str(uuid.uuid4())
+    job_id = None
 
     if wrapper is not None:
         try:
             input_data = wrapper.input_class(smiles=[canonical_smiles], n_best=10)
-            asyncio.create_task(wrapper.call_async(input_data))
+            job_id = await wrapper.call_async(input_data)
         except Exception as e:
             print(f"Warning: Background Celery queueing deferred: {e}")
+
+    if not job_id:
+        job_id = str(uuid.uuid4())
 
     return PlanResponse(
         status_code=200,
@@ -188,8 +192,9 @@ async def get_plan_status(job_id: str):
     Polls the background job and returns resolved pathways once complete.
     """
     try:
+        from askcos2_celery.celery import app as celery_app
         poll_timeout = float(os.environ.get("POLL_TIMEOUT_SECONDS", "1.0"))
-        result = AsyncResult(job_id)
+        result = AsyncResult(job_id, app=celery_app)
         state = await asyncio.wait_for(
             asyncio.to_thread(lambda: result.state),
             timeout=poll_timeout

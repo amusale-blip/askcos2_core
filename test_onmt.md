@@ -1,6 +1,6 @@
-# `askcos2_core` End-to-End Testing & Command Execution Guide
+# onmt_MolTrans End-to-End Testing & Execution Guide (`askcos2_core`)
 
-This comprehensive reference document captures exact, step-by-step terminal commands to launch the `askcos2_core` server and test all retrosynthesis API endpoints (both low-level wrappers and high-level Section 3 v1 REST interfaces).
+This comprehensive reference document captures exact, step-by-step terminal commands to launch the `askcos2_core` server and test the `onmt_moltrans` retrosynthesis API endpoints (both low-level wrappers and high-level Section 3 v1 REST interfaces).
 
 ---
 
