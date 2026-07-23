@@ -237,10 +237,11 @@ mcp.mount_http(app)
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 9100))
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=9100,
+        port=port,
         ssl_certfile=os.environ.get("ASKCOS_SSL_CERT_FILE"),
         ssl_keyfile=os.environ.get("ASKCOS_SSL_KEY_FILE")
     )
