@@ -1,3 +1,5 @@
+import os
+
 module_config = {
     "modules_to_start": {
         "atom_map_indigo": True,
@@ -21,6 +23,8 @@ module_config = {
         "qm_descriptors": True,
         "reaction_classification": True,
         "retro_augmented_transformer": True,
+        "retro_onmt_moltrans": True,
+        "retro_retrochimera": True,
         "retro_exact_match": True,
         "retro_graph2smiles": True,
         "retro_retrosim": True,
@@ -383,6 +387,46 @@ module_config = {
             "available_model_names": [
                 "pistachio_23Q3",
                 "USPTO_FULL"
+            ]
+        }
+    },
+
+    "retro_onmt_moltrans": {
+        "repo": "git@github.com:theteamatx/x-woodward-investigations.git",
+        "description": "One-step retrosynthesis model using the sequence-to-sequence Molecular Transformer (onmt_MolTrans) across Vertex AI",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_vertex_ai": os.environ.get("USE_VERTEX_AI", "True").lower() in ("true", "1"),
+            "vertex_project": os.environ.get("VERTEX_PROJECT", "x-woodward"),
+            "vertex_location": os.environ.get("VERTEX_LOCATION", "us-central1"),
+            "vertex_endpoint_id": os.environ.get("VERTEX_ENDPOINT_ID", "2804467684119412736"),
+            "use_gpu": False,
+            "ports_to_expose": [8080],
+            "default_prediction_url": os.environ.get("PREDICTION_URL", "https://us-central1-prediction-aiplatform.mtls.googleapis.com"),
+            "custom_prediction_url": "",
+            "timeout": int(os.environ.get("PREDICTION_TIMEOUT", "360")),
+            "available_model_names": [
+                "onmt-moltrans-service-model"
+            ]
+        }
+    },
+
+    "retro_retrochimera": {
+        "repo": "git@github.com:theteamatx/x-woodward-investigations.git",
+        "description": "Retrosynthesis model using RetroChimera across Vertex AI",
+        "deployment": {
+            "deployment_config": "deployment.yaml",
+            "use_vertex_ai": os.environ.get("USE_VERTEX_AI", "True").lower() in ("true", "1"),
+            "vertex_project": os.environ.get("VERTEX_PROJECT", "x-woodward"),
+            "vertex_location": os.environ.get("VERTEX_LOCATION", "us-central1"),
+            "vertex_endpoint_id": os.environ.get("RETROCHIMERA_VERTEX_ENDPOINT_ID", "YOUR_ENDPOINT_ID"),
+            "use_gpu": False,
+            "ports_to_expose": [8080],
+            "default_prediction_url": os.environ.get("RETROCHIMERA_PREDICTION_URL", "http://127.0.0.1:8080"),
+            "custom_prediction_url": "",
+            "timeout": int(os.environ.get("PREDICTION_TIMEOUT", "360")),
+            "available_model_names": [
+                "retrochimera-service-model"
             ]
         }
     },

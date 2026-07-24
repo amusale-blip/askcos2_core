@@ -24,10 +24,12 @@ class UtilRegistry:
         module_config = importlib.import_module(config_path).module_config
         self.module_config = module_config
 
-        self._utils = {
-            util_name: util_class(util_config=module_config.get(util_name))
-            for util_name, util_class in UTIL_CLASSES.items()
-        }
+        self._utils = {}
+        for util_name, util_class in UTIL_CLASSES.items():
+            try:
+                self._utils[util_name] = util_class(util_config=module_config.get(util_name))
+            except Exception as e:
+                print(f"Warning: Skipping util '{util_name}' during initialization due to error: {e}")
 
     def get_util(self, module: str):
         return self._utils.get(module, None)
