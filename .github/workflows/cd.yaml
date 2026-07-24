@@ -1,0 +1,94 @@
+name: CD (askcos2-core-app)
+
+on:
+  push:
+    branches:
+      - feature/retrochimera-integration
+      - dev
+      - main
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: "Environment to deploy to"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-dev:
+    name: Deploy to Cloud Run (askcos2-core-app)
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.GCP_SERVICE_ACCOUNT }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-west1-docker.pkg.dev
+
+      - name: Build and tag Docker image
+        run: |
+          docker build \
+            -f Dockerfile_app \
+            -t us-west1-docker.pkg.dev/x-woodward/askcos2-core/askcos2-core-app:${{ github.sha }} \
+            -t us-west1-docker.pkg.dev/x-woodward/askcos2-core/askcos2-core-app:latest \
+            .
+
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker push us-west1-docker.pkg.dev/x-woodward/askcos2-core/askcos2-core-app:${{ github.sha }}
+          docker push us-west1-docker.pkg.dev/x-woodward/askcos2-core/askcos2-core-app:latest
+
+      - name: Deploy to Cloud Run (askcos2-core-app)
+        id: deploy
+        run: |
+          gcloud run deploy askcos2-core-app \
+            --image=us-west1-docker.pkg.dev/x-woodward/askcos2-core/askcos2-core-app:${{ github.sha }} \
+            --service-account=${{ secrets.GCP_CLOUD_RUN_SERVICE_ACC }} \
+            --platform=managed \
+            --region=us-west1 \
+            --allow-unauthenticated \
+            --memory=2Gi \
+            --cpu=2 \
+            --min-instances=0 \
+            --max-instances=5 \
+            --port=9100 \
+            --ingress=internal-and-cloud-load-balancing \
+            --network=default \
+            --subnet=default \
+            --vpc-egress=all-traffic \
+            --set-env-vars="USE_VERTEX_AI=1,VERTEX_PROJECT=x-woodward,VERTEX_LOCATION=us-central1,VERTEX_ENDPOINT_ID=2804467684119412736,RETROCHIMERA_VERTEX_ENDPOINT_ID=2012551031283515392"
+
+          # Get the service URL
+          SERVICE_URL=$(gcloud run services describe askcos2-core-app \
+            --region=us-west1 \
+            --format='value(status.url)')
+          echo "url=$SERVICE_URL" >> $GITHUB_OUTPUT
+
+      - name: Create deployment summary
+        run: |
+          echo "### 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Cloud Run Service:** \`askcos2-core-app\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Service URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY

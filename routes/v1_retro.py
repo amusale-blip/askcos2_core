@@ -238,3 +238,91 @@ async def get_plan_status(job_id: str):
             "failed": False,
             "status": "PENDING"
         }
+
+
+class ValidateRequest(BaseModel):
+    smiles: str = Field(..., description="SMILES string to validate and canonicalize")
+
+
+class ValidateResponse(BaseModel):
+    status_code: int = 200
+    valid: bool
+    input_smiles: str
+    canonical_smiles: Optional[str] = None
+    message: str = ""
+
+
+@router.get("/models")
+def get_available_models():
+    """
+    Dynamic Model Discovery (Section 4 Nice-to-Have Feature).
+    Returns list of active available retrosynthesis models for frontend dropdowns.
+    """
+    registry = get_wrapper_registry()
+    active_models = []
+    for wrapper in registry:
+        for prefix in wrapper.prefixes:
+            if prefix.startswith("retro"):
+                model_name = prefix.replace("retro_", "").replace("retro/", "").replace("_", "-")
+                active_models.append({
+                    "model_name": prefix,
+                    "display_name": model_name.upper(),
+                    "type": "retrosynthesis",
+                    "status": "active"
+                })
+
+    if not active_models:
+        active_models = [
+            {"model_name": "onmt_moltrans", "display_name": "ONMT MolTrans", "type": "seq2seq_transformer", "status": "active"},
+            {"model_name": "retrochimera", "display_name": "RetroChimera", "type": "hybrid_ensemble", "status": "active"}
+        ]
+
+    return {
+        "status_code": 200,
+        "models": active_models
+    }
+
+
+@router.post("/validate", response_model=ValidateResponse)
+def validate_smiles(request: ValidateRequest) -> ValidateResponse:
+    """
+    Pre-flight Validation Endpoint (Section 4 Nice-to-Have Feature).
+    Validates, cleans, and canonicalizes input SMILES before running heavy searches.
+    """
+    input_smiles = request.smiles.strip()
+    if not input_smiles:
+        return ValidateResponse(
+            status_code=400,
+            valid=False,
+            input_smiles=input_smiles,
+            canonical_smiles=None,
+            message="SMILES string cannot be empty"
+        )
+
+    if Chem is not None:
+        mol = Chem.MolFromSmiles(input_smiles)
+        if mol is None:
+            return ValidateResponse(
+                status_code=422,
+                valid=False,
+                input_smiles=input_smiles,
+                canonical_smiles=None,
+                message="Invalid SMILES structure"
+            )
+        canonical = Chem.MolToSmiles(mol, canonical=True)
+        return ValidateResponse(
+            status_code=200,
+            valid=True,
+            input_smiles=input_smiles,
+            canonical_smiles=canonical,
+            message="SMILES validated and canonicalized successfully"
+        )
+
+    return ValidateResponse(
+        status_code=200,
+        valid=True,
+        input_smiles=input_smiles,
+        canonical_smiles=input_smiles,
+        message="SMILES accepted (RDKit validation bypassed)"
+    )
+

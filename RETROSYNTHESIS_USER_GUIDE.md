@@ -306,3 +306,32 @@ python3 -m pytest -s \
   tests/wrappers/retro/retro_onmt_moltrans_test.py \
   tests/wrappers/retro/retro_retrochimera_test.py
 ```
+---
+
+# 🖥️ Part 3: Interactive Web Application UI (`http://127.0.0.1:8095/`)
+
+A modern, responsive single-page web workspace built specifically for researchers to explore retrosynthesis predictions visually without writing code:
+
+### 🌟 Key Web UI Features:
+1. **Dynamic Gateway Connection Status**: Automatically polls active model discovery on launch.
+2. **Molecule SMILES Preset Pills**: Instant presets (`Ethyl Acetate`, `Boc-Protected Amine`, `Aspirin`, `Paracetamol`).
+3. **Interactive Pre-flight Validator (`⚡ Validate`)**: Validates structure and renders canonical 2D chemical structure diagrams.
+4. **Multi-Model Selector**: Checkbox toggles for `ONMT MolTrans` and `RetroChimera`.
+5. **Interactive Single-step Expansion (`🔬 Expand One Step`)**: Displays predicted precursor cards with model confidence scores.
+6. **MCTS Pathway Tree Visualizer (`🌳 Plan Pathway Tree`)**: Asynchronous job queue launcher and live status polling.
+7. **Swagger OpenAPI Spec Link**: One-click navigation to interactive browser docs (`http://127.0.0.1:8095/docs`).
+
+---
+
+### 🚀 How to Access the Web UI:
+
+1. Launch Gateway Server:
+   ```bash
+   PORT=8095 python3 app.py
+   ```
+2. Open your web browser and navigate to:
+   ```text
+   http://127.0.0.1:8095/
+   ```
+
+
