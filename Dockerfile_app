@@ -1,6 +1,7 @@
 FROM mambaorg/micromamba:1.4.7
 
 USER root
+ENV PATH="/opt/conda/bin:${PATH}"
 # Keep the base environment activated
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN apt update && apt -y install git gcc g++ make curl ca-certificates
