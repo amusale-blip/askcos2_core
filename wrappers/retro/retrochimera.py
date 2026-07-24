@@ -81,21 +81,13 @@ class RetroChimeraWrapper(BaseWrapper):
         return super().is_ready()
 
     def call_raw(self, input: RetroChimeraInput) -> RetroChimeraOutput:
-        use_vertex = self.config["deployment"].get("use_vertex_ai", False)
+        from configs.gcp_config import GCPConfig
+        use_vertex = GCPConfig.USE_VERTEX_AI or self.config["deployment"].get("use_vertex_ai", False)
 
         if use_vertex:
-            endpoint_id = os.environ.get(
-                "RETROCHIMERA_VERTEX_ENDPOINT_ID",
-                os.environ.get("VERTEX_ENDPOINT_ID", self.config["deployment"]["vertex_endpoint_id"])
-            )
-            region = os.environ.get(
-                "RETROCHIMERA_VERTEX_LOCATION",
-                os.environ.get("VERTEX_LOCATION", self.config["deployment"].get("vertex_location", "us-central1"))
-            )
-            project = os.environ.get(
-                "RETROCHIMERA_VERTEX_PROJECT",
-                os.environ.get("VERTEX_PROJECT", self.config["deployment"].get("vertex_project", "x-woodward"))
-            )
+            endpoint_id = GCPConfig.RETROCHIMERA_ENDPOINT_ID or self.config["deployment"]["vertex_endpoint_id"]
+            region = GCPConfig.VERTEX_LOCATION
+            project = GCPConfig.VERTEX_PROJECT
 
             payload = {
                 "instances": [
