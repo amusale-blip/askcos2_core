@@ -111,3 +111,72 @@ curl -s -X GET "http://${PUBLIC_IP}/api/v1/retro/plan/${JOB_ID}" \
   -H "Host: ${HOST_HEADER}" \
   -H "Authorization: Bearer $(gcloud auth print-identity-token)" | jq .
 ```
+
+---
+
+## 🔍 4. Dynamic Model Discovery (`GET /api/v1/retro/models`)
+
+Returns all available active retrosynthesis models for frontend dropdown population:
+
+### Request Command:
+```bash
+PUBLIC_IP="8.232.102.201"
+HOST_HEADER="askcos2-core-app-324499629735.us-central1.run.app"
+
+curl -s -X GET "http://${PUBLIC_IP}/api/v1/retro/models" \
+  -H "Host: ${HOST_HEADER}" \
+  -H "Authorization: Bearer $(gcloud auth print-identity-token)" | jq .
+```
+
+### Response Payload:
+```json
+{
+  "status_code": 200,
+  "models": [
+    {
+      "model_name": "onmt_moltrans",
+      "display_name": "ONMT MolTrans",
+      "type": "seq2seq_transformer",
+      "status": "active"
+    },
+    {
+      "model_name": "retrochimera",
+      "display_name": "RetroChimera",
+      "type": "hybrid_ensemble",
+      "status": "active"
+    }
+  ]
+}
+```
+
+---
+
+## ✅ 5. Pre-flight SMILES Validation (`POST /api/v1/retro/validate`)
+
+Validates, cleans, and canonicalizes input SMILES before submitting heavy searches:
+
+### Request Command:
+```bash
+PUBLIC_IP="8.232.102.201"
+HOST_HEADER="askcos2-core-app-324499629735.us-central1.run.app"
+
+curl -s -X POST "http://${PUBLIC_IP}/api/v1/retro/validate" \
+  -H "Host: ${HOST_HEADER}" \
+  -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "smiles": "CC(=O)OCC"
+  }' | jq .
+```
+
+### Response Payload:
+```json
+{
+  "status_code": 200,
+  "valid": true,
+  "input_smiles": "CC(=O)OCC",
+  "canonical_smiles": "CCOC(C)=O",
+  "message": "SMILES validated and canonicalized successfully"
+}
+```
+
