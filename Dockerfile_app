@@ -6,7 +6,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN apt update && apt -y install git gcc g++ make curl ca-certificates
 
 # Use micromamba to resolve conda-forge, much faster than conda
-RUN micromamba install -y python=3.10.12 pip=23.2.1 rdkit=2023.03.3 -c conda-forge
+RUN micromamba install -y python=3.10.12 pip=23.2.1 rdkit=2023.03.3 google-auth -c conda-forge
 RUN pip install \
     bcrypt==4.3.0 \
     "celery[gevent,amqp,redis]"==5.6.2 \
