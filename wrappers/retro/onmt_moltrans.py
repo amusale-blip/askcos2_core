@@ -99,16 +99,38 @@ class RetroOnmtMolTransWrapper(BaseWrapper):
                 tmp_path = f.name
 
             try:
-                cmd = [
-                    "gcloud", "ai", "endpoints", "predict", str(endpoint_id),
-                    f"--region={region}",
-                    f"--project={project}",
-                    f"--json-request={tmp_path}",
-                    "--format=json"
-                ]
+                response_data = None
+                try:
+                    import google.auth
+                    import google.auth.transport.requests
+                    import requests
 
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                response_data = json.loads(result.stdout)
+                    credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+                    auth_req = google.auth.transport.requests.Request()
+                    credentials.refresh(auth_req)
+
+                    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project}/locations/{region}/endpoints/{endpoint_id}:predict"
+                    headers = {
+                        "Authorization": f"Bearer {credentials.token}",
+                        "Content-Type": "application/json"
+                    }
+                    resp = requests.post(url, json=payload, headers=headers, timeout=360)
+                    resp.raise_for_status()
+                    response_data = resp.json()
+                except Exception as auth_err:
+                    try:
+                        cmd = [
+                            "gcloud", "ai", "endpoints", "predict", str(endpoint_id),
+                            f"--region={region}",
+                            f"--project={project}",
+                            f"--json-request={tmp_path}",
+                            "--format=json"
+                        ]
+                        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                        response_data = json.loads(result.stdout)
+                    except Exception as sub_err:
+                        print(f"Error calling Vertex AI endpoint: {auth_err} / {sub_err}")
+                        response_data = {}
 
                 raw_predictions = response_data
                 if isinstance(response_data, dict):
