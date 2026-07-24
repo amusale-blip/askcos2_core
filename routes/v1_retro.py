@@ -92,17 +92,20 @@ def expand_one(request: ExpandOneRequest) -> ExpandOneResponse:
     all_results = []
 
     for model_key in request.models:
-        wrapper_name = model_key
-        if not wrapper_name.startswith("retro_"):
-            wrapper_name = f"retro_{model_key}"
-
-        wrapper = registry.get_wrapper(wrapper_name)
+        wrapper = registry.get_wrapper(model_key)
         if wrapper is None:
-            # Try alternate key format
-            wrapper = registry.get_wrapper(model_key)
+            wrapper = registry.get_wrapper(f"retro/{model_key}")
+        if wrapper is None:
+            wrapper = registry.get_wrapper(f"retro_{model_key}")
+        if wrapper is None:
+            for w in registry:
+                if any(model_key in p or p.endswith(model_key) for p in w.prefixes):
+                    wrapper = w
+                    break
 
         if wrapper is None:
             continue
+
 
         try:
             # Reconstruct model input
@@ -161,11 +164,19 @@ async def plan_pathway(request: PlanRequest) -> PlanResponse:
     registry = get_wrapper_registry()
 
     target_model = request.models[0] if request.models else "onmt_moltrans"
-    if not target_model.startswith("retro_"):
-        target_model = f"retro_{target_model}"
-
     wrapper = registry.get_wrapper(target_model)
+    if wrapper is None:
+        wrapper = registry.get_wrapper(f"retro/{target_model}")
+    if wrapper is None:
+        wrapper = registry.get_wrapper(f"retro_{target_model}")
+    if wrapper is None:
+        for w in registry:
+            if any(target_model in p or p.endswith(target_model) for p in w.prefixes):
+                wrapper = w
+                break
+
     job_id = None
+
 
     if wrapper is not None:
         try:
