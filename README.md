@@ -34,13 +34,3 @@ $ make deploy
 The setup phase will then run automatically, e.g., cloning the repos for backend modules, building docker images, seeding databases. After setup, the web app will be started with the Graphical User Interface accessible at the host ip address, e.g., 0.0.0.0. Simply type this address in your browser, and the welcome page will appear. **CONTINUE AS GUEST** to explore ASKCOS. Signup or login is not required for using most modules.
 
 The web app is written in [Vue.js](https://vuejs.org/), which communicates with the backend. The core piece of the backend, the _API Gateway_, is written in [FastAPI](https://fastapi.tiangolo.com/), with its own interactive documentation accessible at [http://0.0.0.0:9100/docs](http://0.0.0.0:9100/docs).
-
----
-
-## 📚 Documentation & Guides
-
-Comprehensive documentation for Cloud Run deployment, Google Cloud Load Balancer infrastructure, and Retrosynthesis API testing:
-
-- **[Master Deployment & Infrastructure Guide](docs/DEPLOYMENT_GUIDE.md)**: Cloud Build, Cloud Run revision management, Serverless NEG, and Public Load Balancer configuration.
-- **[Master Retrosynthesis API User Guide](docs/RETROSYNTHESIS_USER_GUIDE.md)**: Single-step expansion (`/expand-one`), pathway planning (`/plan`), model wrappers (`onmt_moltrans`, `retrochimera`), and cURL testing.
-
