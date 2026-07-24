@@ -3,13 +3,18 @@ FROM mambaorg/micromamba:1.4.7
 USER root
 ENV PATH="/opt/conda/bin:/opt/google-cloud-sdk/bin:${PATH}"
 
-# Install gcloud CLI and base utilities
-RUN apt update && apt -y install git gcc g++ make curl ca-certificates && \
-    curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/opt && \
+# Keep the base environment activated
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
+RUN apt update && apt -y install git gcc g++ make curl ca-certificates
+
+# 1. Use micromamba to install Python 3.10 first
+RUN micromamba install -y python=3.10.12 pip=23.2.1 rdkit=2023.03.3 -c conda-forge
+
+# 2. Install gcloud CLI after Python is present
+RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/opt && \
     ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
 
-# Use micromamba to resolve conda-forge, much faster than conda
-RUN micromamba install -y python=3.10.12 pip=23.2.1 rdkit=2023.03.3 -c conda-forge
+# 3. Install core Python dependencies
 RUN pip install \
     bcrypt==4.3.0 \
     "celery[gevent,amqp,redis]"==5.6.2 \
@@ -38,7 +43,7 @@ RUN pip install \
     python-keycloak==3.7.0 \
     rdchiral==1.1.0
 
-# FORCE UNCACHED INSTALLATION OF GOOGLE-AUTH
+# Force uncached installation of google-auth into /opt/conda environment
 RUN /opt/conda/bin/pip install --no-cache-dir google-auth==2.29.0
 
 COPY . /ASKCOSv2/askcos2_core
