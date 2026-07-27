@@ -158,7 +158,7 @@ async def _execute_background_plan(job_id: str, canonical_smiles: str, requested
     )
 
 
-@router.post("/plan", response_model=PlanResponse)
+@router.post("/plan", response_model=PlanResponse, response_model_exclude_none=True)
 async def plan_pathway(request: PlanRequest) -> PlanResponse:
     """
     Automated Pathway Generation (Section 3.2 of project requirements).
