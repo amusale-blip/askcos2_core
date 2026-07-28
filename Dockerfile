@@ -43,8 +43,8 @@ RUN pip install \
     python-keycloak==3.7.0 \
     rdchiral==1.1.0
 
-# Force uncached installation of google-auth into /opt/conda environment
-RUN /opt/conda/bin/pip install --no-cache-dir google-auth==2.29.0
+# Force uncached installation of google-auth and google-cloud-firestore into /opt/conda environment
+RUN /opt/conda/bin/pip install --no-cache-dir google-auth==2.29.0 google-cloud-firestore google-cloud-datastore
 
 COPY . /ASKCOSv2/askcos2_core
 WORKDIR /ASKCOSv2/askcos2_core

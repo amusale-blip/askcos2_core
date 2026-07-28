@@ -108,40 +108,78 @@ def expand_one(request: ExpandOneRequest) -> ExpandOneResponse:
     )
 
 
-@router.post("/plan", response_model=PlanResponse)
+from utils.job_storage import JobStorage
+
+
+async def _execute_background_plan(job_id: str, canonical_smiles: str, requested_models: list[str]):
+    """Background task handler for executing pathway planning searches asynchronously."""
+    registry = get_wrapper_registry()
+    all_results = []
+
+    for model_name in requested_models:
+        w = registry.get_wrapper(model_name)
+        if w is None:
+            w = registry.get_wrapper(f"retro/{model_name}")
+        if w is None:
+            w = registry.get_wrapper(f"retro_{model_name}")
+        if w is None:
+            for item in registry:
+                if any(model_name in p or p.endswith(model_name) for p in item.prefixes):
+                    w = item
+                    break
+
+        if w is not None:
+            try:
+                input_data = w.input_class(smiles=[canonical_smiles], n_best=10)
+                response = w.call_sync(input_data)
+                raw_result = response.model_dump().get("result", [])
+                if raw_result and isinstance(raw_result, list) and isinstance(raw_result[0], dict):
+                    item = raw_result[0]
+                    raw_reactants = item.get("products", item.get("reactants", []))
+                    raw_scores = item.get("scores", [])
+
+                    all_results.append(
+                        SingleExpansionResult(
+                            model=model_name,
+                            reactants=raw_reactants,
+                            scores=[float(s) for s in raw_scores]
+                        )
+                    )
+            except Exception as e:
+                print(f"Error executing model {model_name} in background plan: {e}")
+
+    # Persist completed results to JobStorage
+    JobStorage.save_job(
+        job_id=job_id,
+        status="SUCCESS" if all_results else "FAILURE",
+        message="Pathway planning completed successfully" if all_results else "Pathway planning failed",
+        target_smiles=canonical_smiles,
+        results=[r.model_dump() for r in all_results]
+    )
+
+
+@router.post("/plan", response_model=PlanResponse, response_model_exclude_none=True)
 async def plan_pathway(request: PlanRequest) -> PlanResponse:
     """
-    Asynchronous Automated Pathway Generation (Section 3.2 of project requirements).
-    Triggers background search jobs to build full pathways back to available starting materials.
+    Automated Pathway Generation (Section 3.2 of project requirements).
+    Triggers background pathway search jobs and returns job tracking status.
     """
     import uuid
     canonical_smiles = canonicalize_smiles(request.target_smiles)
-    registry = get_wrapper_registry()
+    requested_models = request.models if request.models else ["onmt_moltrans", "retrochimera"]
 
-    target_model = request.models[0] if request.models else "onmt_moltrans"
-    wrapper = registry.get_wrapper(target_model)
-    if wrapper is None:
-        wrapper = registry.get_wrapper(f"retro/{target_model}")
-    if wrapper is None:
-        wrapper = registry.get_wrapper(f"retro_{target_model}")
-    if wrapper is None:
-        for w in registry:
-            if any(target_model in p or p.endswith(target_model) for p in w.prefixes):
-                wrapper = w
-                break
+    job_id = str(uuid.uuid4())
 
-    job_id = None
+    # 1. Register PENDING state in JobStorage
+    JobStorage.save_job(
+        job_id=job_id,
+        status="PENDING",
+        message="Pathway planning job queued successfully",
+        target_smiles=canonical_smiles
+    )
 
-
-    if wrapper is not None:
-        try:
-            input_data = wrapper.input_class(smiles=[canonical_smiles], n_best=10)
-            job_id = await wrapper.call_async(input_data)
-        except Exception as e:
-            print(f"Warning: Background Celery queueing deferred: {e}")
-
-    if not job_id:
-        job_id = str(uuid.uuid4())
+    # 2. Trigger asynchronous background execution
+    asyncio.create_task(_execute_background_plan(job_id, canonical_smiles, requested_models))
 
     return PlanResponse(
         status_code=200,
@@ -155,55 +193,9 @@ async def plan_pathway(request: PlanRequest) -> PlanResponse:
 async def get_plan_status(job_id: str):
     """
     Job Status & Pathway Retrieval (Section 3.3 of project requirements).
-    Polls the background job and returns resolved pathways once complete.
+    Retrieves the execution status and resolved pathway tree for a queued plan job.
     """
-    try:
-        from askcos2_celery.celery import app as celery_app
-        poll_timeout = float(os.environ.get("POLL_TIMEOUT_SECONDS", "1.0"))
-        result = AsyncResult(job_id, app=celery_app)
-        state = await asyncio.wait_for(
-            asyncio.to_thread(lambda: result.state),
-            timeout=poll_timeout
-        )
-
-        if state == "SUCCESS":
-            res_data = await asyncio.wait_for(
-                asyncio.to_thread(lambda: result.result),
-                timeout=poll_timeout
-            )
-            return {
-                "status_code": 200,
-                "job_id": job_id,
-                "complete": True,
-                "failed": False,
-                "status": "SUCCESS",
-                "result": res_data
-            }
-        elif state == "FAILURE":
-            return {
-                "status_code": 500,
-                "job_id": job_id,
-                "complete": True,
-                "failed": True,
-                "status": "FAILURE",
-                "message": "Task failed during execution"
-            }
-        else:
-            return {
-                "status_code": 200,
-                "job_id": job_id,
-                "complete": False,
-                "failed": False,
-                "status": "PENDING"
-            }
-    except Exception as e:
-        return {
-            "status_code": 200,
-            "job_id": job_id,
-            "complete": False,
-            "failed": False,
-            "status": "PENDING"
-        }
+    return JobStorage.get_job(job_id)
 
 
 @router.get("/models")

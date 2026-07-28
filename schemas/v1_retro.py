@@ -59,7 +59,6 @@ class PlanResponse(BaseModel):
     job_id: str
     status: str = "PENDING"
     message: str = "Pathway planning job accepted"
-    results: Optional[list[SingleExpansionResult]] = None
     result: Optional[dict[str, Any]] = None
 
 
