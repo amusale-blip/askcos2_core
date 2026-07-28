@@ -228,12 +228,14 @@ for tooltip_category, content in TOOLTIPS.items():
         )
 app.include_router(tooltip_router)
 
-# mcp_app = FastAPI()
-mcp = FastApiMCP(
-    app,
-    include_operations=INCLUDE_OPERATIONS
-)
-mcp.mount_http(app)
+try:
+    mcp = FastApiMCP(
+        app,
+        include_operations=INCLUDE_OPERATIONS
+    )
+    mcp.mount_http(app)
+except Exception as e:
+    print(f"Warning: FastApiMCP initialization skipped: {e}")
 
 
 if __name__ == "__main__":
