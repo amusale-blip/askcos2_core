@@ -7,18 +7,15 @@ from typing import Any, Literal
 
 class RetroBackendOption(LowerCamelAliasModel):
     retro_backend: Literal[
-        "augmented_transformer",
-        "exact_match",
-        "graph2smiles",
-        "template_enumeration",
-        "template_relevance",
-        "retrosim"
+        "aizynthfinder",
+        "onmt_moltrans",
+        "retrochimera"
     ] = Field(
-        default="template_relevance",
+        default="onmt_moltrans",
         description="backend for one-step retrosynthesis"
     )
     retro_model_name: str = Field(
-        default="reaxys",
+        default="onmt-moltrans-service-model",
         description="backend model name for one-step retrosynthesis"
     )
 

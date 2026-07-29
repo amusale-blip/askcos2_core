@@ -14,8 +14,8 @@ class ExpandOneRequest(BaseModel):
         example="CC(C)(C)OC(=O)N1CCCC(OCCCCO)CC1"
     )
     models: list[str] = Field(
-        default=["onmt_moltrans"],
-        description="list of retrosynthesis model names to query (e.g. ['onmt_moltrans', 'augmented_transformer', 'retrochimera'])"
+        default=["aizynthfinder", "onmt_moltrans", "retrochimera"],
+        description="list of retrosynthesis model names to query (e.g. ['aizynthfinder', 'onmt_moltrans', 'retrochimera'])"
     )
     settings: Optional[ExpandOneSettings] = Field(default_factory=ExpandOneSettings)
 
@@ -49,7 +49,7 @@ class PlanRequest(BaseModel):
         description="target SMILES string for pathway search",
         example="CC(C)(C)OC(=O)N1CCCC(OCCCCO)CC1"
     )
-    models: list[str] = Field(default=["onmt_moltrans"])
+    models: list[str] = Field(default=["aizynthfinder", "onmt_moltrans", "retrochimera"])
     search_strategy: Optional[SearchStrategy] = Field(default_factory=SearchStrategy)
     termination_criteria: Optional[TerminationCriteria] = Field(default_factory=TerminationCriteria)
 

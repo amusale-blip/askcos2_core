@@ -166,7 +166,7 @@ async def plan_pathway(request: PlanRequest) -> PlanResponse:
     """
     import uuid
     canonical_smiles = canonicalize_smiles(request.target_smiles)
-    requested_models = request.models if request.models else ["onmt_moltrans", "retrochimera"]
+    requested_models = request.models if request.models else ["aizynthfinder", "onmt_moltrans", "retrochimera"]
 
     job_id = str(uuid.uuid4())
 
@@ -219,6 +219,7 @@ def get_available_models():
 
     if not active_models:
         active_models = [
+            {"model_name": "aizynthfinder", "display_name": "AiZynthFinder", "type": "onnx_template", "status": "active"},
             {"model_name": "onmt_moltrans", "display_name": "ONMT MolTrans", "type": "seq2seq_transformer", "status": "active"},
             {"model_name": "retrochimera", "display_name": "RetroChimera", "type": "hybrid_ensemble", "status": "active"}
         ]
