@@ -58,6 +58,10 @@ class RetroChimeraResponse(BaseResponse):
     result: list[RetroChimeraResult]
 
 
+RetroRetroChimeraInput = RetroChimeraInput
+RetroRetroChimeraResponse = RetroChimeraResponse
+
+
 @register_wrapper(
     name="retro_retrochimera",
     input_class=RetroChimeraInput,
