@@ -114,7 +114,7 @@ class RetroChimeraWrapper(BaseWrapper):
                     auth_req = google.auth.transport.requests.Request()
                     credentials.refresh(auth_req)
 
-                    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project}/locations/{region}/endpoints/{endpoint_id}:predict"
+                    url = f"https://{region}-prediction-aiplatform.googleapis.com/v1/projects/{project}/locations/{region}/endpoints/{endpoint_id}:predict"
                     headers = {
                         "Authorization": f"Bearer {credentials.token}",
                         "Content-Type": "application/json"

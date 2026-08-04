@@ -420,7 +420,7 @@ module_config = {
             "use_vertex_ai": os.environ.get("USE_VERTEX_AI", "True").lower() in ("true", "1"),
             "vertex_project": os.environ.get("VERTEX_PROJECT", "x-woodward"),
             "vertex_location": os.environ.get("VERTEX_LOCATION", "us-central1"),
-            "vertex_endpoint_id": os.environ.get("RETROCHIMERA_VERTEX_ENDPOINT_ID", "YOUR_ENDPOINT_ID"),
+            "vertex_endpoint_id": os.environ.get("RETROCHIMERA_VERTEX_ENDPOINT_ID", "2012551031283515392"),
             "use_gpu": False,
             "ports_to_expose": [8080],
             "default_prediction_url": os.environ.get("RETROCHIMERA_PREDICTION_URL", "http://127.0.0.1:8080"),
